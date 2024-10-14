@@ -18,7 +18,27 @@
 <section class='container-fluid p-3 my-3'>
 
     <nav class='nav nav-pills flex-column flex-sm-row'>
+        <!-- Menu link home -->
         <a class='nav-item nav-link' href='{{ url_for("index") }}'>Home</a>
+
+        <!-- Menu link registration -->
+        <a class='nav-item nav-link' href='{{ url_for("accounts/registration") }}'>Registration</a>
+
+        <!-- Menu link login -->
+        <a class='nav-item nav-link' href='{{ url_for("accounts/login") }}'>Login</a>
+
+        <!-- Menu link account -->
+        <a class='nav-item nav-link' href='{{ url_for("accounts/account") }}'>Account</a>
+
+        <!-- Menu link posts -->
+        <a class='nav-item nav-link' href='{{ url_for("posts/posts") }}'>Posts</a>
+
+        <!-- Menu link create -->
+        <a class='nav-item nav-link' href='{{ url_for("posts/create") }}'>Create</a>
+        
+        <!-- Menu link security -->
+        <a class='nav-item nav-link' href='{{ url_for("security/security") }}'>Security</a>
+
     </nav>
 
     <div class='container-fluid p-3 my-5 text-center'>
