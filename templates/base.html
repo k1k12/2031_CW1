@@ -5,10 +5,25 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>CSC2031</title>
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css'>
 </head>
 <body>
+<style>
+    .table {
+        margin-left: auto;
+        margin-right: auto;
+    }
+</style>
+
+<section class='container-fluid p-3 my-3'>
+    <div class='container-fluid p-3 my-5 text-center'>
+
     {% block content %}
         <!-- Here is content of any template extending the base template -->
     {% endblock %}
+    
+    </div>
+</section>
+
 </body>
 </html>
