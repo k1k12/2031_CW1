@@ -15,32 +15,32 @@ def registration():
 
 # Load webpage 'login' into browser
 @app.route('/login')
-def registration():
+def login():
     return render_template('accounts/login.html')
 
 # Load webpage 'account' into browser
 @app.route('/account')
-def registration():
+def account():
     return render_template('accounts/account.html')
 
 # Load webpage 'posts' into browser
 @app.route('/posts')
-def registration():
+def posts():
     return render_template('posts/posts.html')
 
 # Load webpage 'create' into browser
 @app.route('/create')
-def registration():
+def create():
     return render_template('posts/create.html')
 
 # Load webpage 'update' into browser
 @app.route('/update')
-def registration():
+def update():
     return render_template('posts/update.html')
 
 # Load webpage 'security' into browser
 @app.route('/security')
-def registration():
+def security():
     return render_template('security/security.html')
 
 # Main method
