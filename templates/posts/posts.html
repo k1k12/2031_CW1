@@ -2,7 +2,50 @@
 
 {% block content %}
 
-        <h1> CSC2031 Posts</h1>
         <p> Sofia French ('230057999')</p>
 
+        <!-- CSS styling and layout -->
+        <div class="container">
+                <h1>Posts</h1>
+                <div class="p-2 row">
+                    <div class="col-2"></div>
+                    <div class="col-8">
+                        <div class="p-2 bg-light border border-primary" style="text-align: left">
+            
+                                <!-- Capture flash message -->
+                                <div>
+                                        {% with messages = get_flashed_messages(with_categories=true) %}
+                                            {% for category, message in messages %}
+                                                
+                                            <!-- Render box for flash message + provide a delete button -->
+                                            <div style="text-align: left" class="alert alert-{{ category }} mt-3 alert-dismissible" role="alert">
+                                                {{ message }}
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" onclick=delete_flash(this)>
+                                                    <span>&times;</span>
+                                                </button>
+                                            </div>    
+                                            
+                                            {% endfor %}
+                                        {% endwith %}
+                                    </div>
+
+                                    <!-- Render posts -->
+                                    
+                                    {% for post in posts %}
+                                        <div class="card border border-dark">
+                                                <!-- Each post rendered by; presentation, title, d+t, body -->
+                                                <div class="card-header bg-dark text-white border border-dark">
+                                                        <h4>{{ post.title }}</h4>
+                                                        <small>{{ post.created.strftime('%H:%M:%S %d-%m-%Y') }}</small>
+                                                    </div>
+                                                    <div class="card-body">{{ post.body }}</div>
+                                        </div>
+                                        <br>
+                                     {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-2"></div>
+                </div>
+            </div>
+            
 {% endblock %}
