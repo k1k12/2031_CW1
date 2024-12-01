@@ -35,6 +35,7 @@ def registration():
         return redirect(url_for('accounts.login'))
     return render_template('accounts/registration.html', form=form)
 
+# PART 7 (5MARKS)
 @accounts_bp.route('/login', methods=['GET','POST'])
 def login():
     # Create instance of LoginForm

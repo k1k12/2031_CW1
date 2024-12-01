@@ -98,7 +98,7 @@ class User(db.Model):
         self.phone = phone
         self.password = password
 
-    # Check if login password = submitted password
+    # Check if login password = submitted password / part 7
     def verify_password(self, submitted_password):
         return self.password == submitted_password
 
