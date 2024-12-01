@@ -98,6 +98,10 @@ class User(db.Model):
         self.phone = phone
         self.password = password
 
+    # Check if login password = submitted password
+    def verify_password(self, submitted_password):
+        return self.password == submitted_password
+
 # Db admin page template
 
 class MainIndexLink(MenuLink):

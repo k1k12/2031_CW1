@@ -1,6 +1,6 @@
 # Imports
 from flask import Blueprint, render_template, flash, redirect, url_for
-from accounts.forms import RegistrationForm
+from accounts.forms import RegistrationForm, LoginForm
 from config import User, db
 
 # Create instance of Blueprint
@@ -35,9 +35,27 @@ def registration():
         return redirect(url_for('accounts.login'))
     return render_template('accounts/registration.html', form=form)
 
-@accounts_bp.route('/login')
+@accounts_bp.route('/login', methods=['GET','POST'])
 def login():
-    return render_template('accounts/login.html')
+    # Create instance of LoginForm
+    form = LoginForm()
+
+    # Validate login form instance 
+    if form.validate_on_submit():
+        # Check account doesn't already exist (same email)
+        user = User.query.filter_by(email=form.email.data).first()
+        # Could merge into one......
+        if not user:
+            flash('Email credential incorrect.', category="danger")
+            return redirect(url_for('accounts.login'))
+        elif not user.verify_password(form.password.data):
+            flash('Login credentials incorrect.', category="danger")
+            return redirect(url_for('accounts.login'))
+        elif user.verify_password(form.password.data):
+            flash('Login successful.', category="success")
+            return redirect(url_for('posts.posts'))
+
+    return render_template('accounts/login.html', form=form)
 
 @accounts_bp.route('/account')
 def account():
