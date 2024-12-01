@@ -109,7 +109,7 @@ class MainIndexLink(MenuLink):
 class PostView(ModelView):
     column_display_pk = True  
     column_hide_backrefs = False
-    column_list = ('id', 'created', 'title', 'body')
+    column_list = ('id', 'userid', 'created', 'title', 'body', 'user')
 
     # Update creation
     def update(self, title, body):
@@ -117,6 +117,12 @@ class PostView(ModelView):
         self.title = title
         self.body = body
         db.session.commit()
+
+# Create UserView class
+class UserView(ModelView):
+    column_display_pk = True  # optional, but I like to see the IDs in the list
+    column_hide_backrefs = False
+    column_list = ('id', 'email', 'password', 'firstname', 'lastname', 'phone', 'posts')
 
 # Create admin instance
 admin = Admin(app, name='DB Admin', template_mode='bootstrap4')
@@ -130,8 +136,10 @@ admin.add_link(MainIndexLink(name='Home Page'))
 # To view data on posts table
 admin.add_view(PostView(Post, db.session))
 
-# Imports
+# To view data on users table
+admin.add_view(UserView(User, db.session))
 
+# Imports to avoid circular imports
 from accounts.views import accounts_bp
 from posts.views import posts_bp
 from security.views import security_bp
