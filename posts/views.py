@@ -33,6 +33,36 @@ def posts():
     all_posts = Post.query.order_by(desc('id')).all()
     return render_template('posts/posts.html', posts=all_posts)
 
-@posts_bp.route('/update')
-def update():
-    return render_template('posts/update.html')
+# Including ID value (int) and allow handling of GET and POST requests
+@posts_bp.route('/<int:id>/update', methods=('GET', 'POST'))
+def update(id):
+    # Post queried from db Post table
+    post_to_update = Post.query.filter_by(id=id).first()
+
+    # If does not exist
+    if not post_to_update:
+        return redirect(url_for('posts.posts'))
+
+    # Initialise form
+    form = PostForm()
+
+    # Check valid
+    if form.validate_on_submit():
+        post_to_update.update(title=form.title.data, body=form.body.data)
+        # Show success message
+        flash('Post updated', category='success')
+        return redirect(url_for('posts.posts'))
+
+    # Pass to update
+    form.title.data = post_to_update.title
+    form.body.data = post_to_update.body
+    return render_template('posts/update.html', form=form)
+
+# Add delete route
+@posts_bp.route('/<int:id>/delete')
+def delete(id):
+    Post.query.filter_by(id=id).delete()
+    db.session.commit()
+
+    flash('Post deleted', category='success')
+    return redirect(url_for('posts.posts'))

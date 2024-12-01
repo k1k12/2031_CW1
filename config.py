@@ -82,6 +82,13 @@ class PostView(ModelView):
     column_hide_backrefs = False
     column_list = ('id', 'created', 'title', 'body')
 
+    # Update creation
+    def update(self, title, body):
+        self.created = datetime.now()
+        self.title = title
+        self.body = body
+        db.session.commit()
+
 # Create admin instance
 admin = Admin(app, name='DB Admin', template_mode='bootstrap4')
 
