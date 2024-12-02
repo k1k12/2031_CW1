@@ -58,6 +58,10 @@
                                         <div class="form-group">
                                                 {{ form.password.label}}<span style="color: red">*</span>
                                                 {{ form.password(class="form-control") }}
+                                                <!-- Display error msg -->
+                                                {% for error in form.password.errors %}
+                                                        {{ error }}
+                                                {% endfor %}
                                         </div>
 
                                         <!-- Render confirm password input field and label-->

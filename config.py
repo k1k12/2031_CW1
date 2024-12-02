@@ -27,6 +27,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///csc2031blog.db'
 app.config['SQLALCHEMY_ECHO'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Create reCAPTCHA keys
+
+app.config['RECAPTCHA_PUBLIC_KEY'] = '6Lcefo8qAAAAAJ3mwVv8jeehCR67ZQCFmwL9Oe-0'
+app.config['RECAPTCHA_PRIVATE_KEY'] = '6Lcefo8qAAAAAME-BjaTPB0X_nUO5snj8yfOdAmb'
 
 # Create metadata variable 
 

@@ -1,10 +1,15 @@
 # Imports
-from flask import Blueprint, render_template, flash, redirect, url_for
+from flask import Blueprint, render_template, flash, redirect, url_for, session
 from accounts.forms import RegistrationForm, LoginForm
 from config import User, db
+# Imports pt 10
+from markupsafe import Markup
 
 # Create instance of Blueprint
 accounts_bp = Blueprint('accounts', __name__, template_folder='templates')
+
+# Create constant for login attempts
+MAX_LOGIN_ATTEMPTS = 3
 
 # Load webpages methods
 
@@ -31,28 +36,44 @@ def registration():
         db.session.commit()
         
         # Display success message
-        flash('Account Successfully Created', category='success')
+        flash('Account successfully created', category='success')
         return redirect(url_for('accounts.login'))
+    
     return render_template('accounts/registration.html', form=form)
 
 # PART 7 (5MARKS)
 @accounts_bp.route('/login', methods=['GET','POST'])
 def login():
+    # PART 10 / 5 MARKS
+    # Define session key if not already defined
+    if not session.get('num_attempts'):
+        session['num_attempts'] = 0
+
     # Create instance of LoginForm
     form = LoginForm()
+
+    # Define var to represent attempts remaining
+    attempts_remaining = (3 - session.get('num_attempts'))
 
     # Validate login form instance 
     if form.validate_on_submit():
         # Check account doesn't already exist (same email)
         user = User.query.filter_by(email=form.email.data).first()
-        # Could merge into one......
-        if not user:
-            flash('Email credential incorrect.', category="danger")
-            return redirect(url_for('accounts.login'))
-        elif not user.verify_password(form.password.data):
-            flash('Login credentials incorrect.', category="danger")
-            return redirect(url_for('accounts.login'))
+        # Check user exists and passwords match
+        if not user or not user.verify_password(form.password.data):
+            # Increment session key
+            session['num_attempts'] += 1
+            # If max attempts exceeded
+            if session['num_attempts'] >= MAX_LOGIN_ATTEMPTS:
+                flash('Maximum number of login attempts exceeded.', category="danger")
+                return redirect(url_for('accounts.login'), form=None)
+            # Display warning message if authentication attempts not exceeded
+            flash('Login credentials incorrect, {} attempts remaining.'.format(attempts_remaining), category="danger")
+            return redirect(url_for('accounts.login'), form=form)
         elif user.verify_password(form.password.data):
+            # Reset session key
+            session['num_attempts'] = 0
+            # Success msg
             flash('Login successful.', category="success")
             return redirect(url_for('posts.posts'))
 
