@@ -16,3 +16,6 @@ Flask-SQLAlchemy
 Flask-WTF
 Flask-Admin
 WTForms
+
+# PT 10
+Flask-Limiter

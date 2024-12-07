@@ -7,6 +7,11 @@ from flask import render_template
 def index():
     return render_template('home/index.html')
 
+# Handle error 429 (too many requests)
+@app.errorhandler(429)
+def function_name(e):
+    return render_template('accounts/error429.html'), 429
+
 # Main method
 if __name__ == '__main__':
     app.run()

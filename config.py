@@ -147,7 +147,22 @@ admin.add_view(PostView(Post, db.session))
 # To view data on users table
 admin.add_view(UserView(User, db.session))
 
-# Imports to avoid circular imports
+## Implement rate limiter PT 10
+
+# Imports for rate limiter
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+# Create default limiter
+limiter = Limiter(
+    app=app,
+    # key_func is set to local host
+    key_func=get_remote_address,
+    # 500 calls per day limit
+    default_limits=["500 / day"]
+)
+
+# Imports for blueprints
 from accounts.views import accounts_bp
 from posts.views import posts_bp
 from security.views import security_bp
