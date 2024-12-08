@@ -29,7 +29,8 @@ class LoginForm(FlaskForm):
     # Validate fields 
     email = StringField('Email Address',validators=[DataRequired()])
     password = PasswordField('Password',validators=[DataRequired()])
-    # Add reCAPTCHA for part 8 / 5 MARKS
+    # MFA pin / part 11
+    mfa_pin = StringField('MFA Code',validators=[DataRequired()])
+    # reCAPTCHA / part 8 
     recaptcha = RecaptchaField()
     submit = SubmitField('submit')
-    

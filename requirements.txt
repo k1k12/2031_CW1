@@ -19,3 +19,7 @@ WTForms
 
 # PT 10
 Flask-Limiter
+
+# PT 11
+pyotp
+flask-qrcode

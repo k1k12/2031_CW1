@@ -47,6 +47,12 @@
                                                 {{ form.password(class="form-control") }}
                                         </div>
 
+                                        <!-- Render password input field and label-->
+                                        <div class="form-group">
+                                                {{ form.mfa_pin.label}}<span style="color: red">*</span>
+                                                {{ form.mfa_pin(class="form-control") }}
+                                        </div>
+
                                         <!-- Render reCAPTCHA form / PART 8 -->
                                         <div class="form-group">{{ form.recaptcha }}</div>
                 

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Basic page layout and CSS -->
+<div class="container">
+        <h1>MFA Set Up</h1>
+
+        <div class="p-2 row">
+                <div class="col-3"></div>
+                <div class="col-6">
+                        
+                        <!-- Handle and render flash images -->
+                        <div>
+                                {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} mt-3 alert-dismissible" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" onclick=delete_flash(this)>
+                                                <span>&times;</span>
+                                        </button>
+                                </div>
+                                {% endfor %}
+                                {% endwith %}
+                        </div>
+
+                        <!-- Open microsoft authenticator -->
+
+                        <div class="box">
+                                <p style="text-align: center"> Open Microsoft Authenticator on your mobile. </p>
+                        </div>
+
+                        <div class="box">
+                                <p style="text-align: center"> Alternatively, <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en_GB">install Google Authenticator</a> on your mobile.</p>
+                        </div>
+
+                        <!-- Open authenticator app -->
+                        <div class="box">
+                                <p style="text-align: center"> Select add new account. </p>
+                        </div>
+
+                        <!-- Enter code -->
+                        <div class="box">
+                                <p style="text-align: center"> Either manually enter the code <em>or</em> scan the QR code below. </p>
+                        </div>
+
+                        <!-- MFA code info -->
+                        <div class="blue-box">
+                                <h2 style="text-align: center">Code</h2>
+                                <p style="text-align: center">{{ key }} </p>
+
+                                <h2 style="text-align: center">QR</h2>
+                                <img src="{{ qrcode(qr, box_size=5, border=5) }}" alt="QR Code" />
+
+                        
+                        </div>
+
+                        <!-- Login link -->
+                        <div>
+                                <p style="text-align: center">Once you have recieved a code, <a href="/login">click here</a>.</p>
+                        </div>
+
+                </div>
+
+                <div class="col-3"></div>
+        </div>
+    
+</div>
+{% endblock %}

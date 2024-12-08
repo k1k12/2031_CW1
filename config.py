@@ -12,6 +12,10 @@ from flask_migrate import Migrate
 from sqlalchemy import MetaData
 from datetime import datetime
 
+# Imports pt 11
+import pyotp
+from flask_qrcode import QRcode
+
 # Define app
 
 app = Flask(__name__)
@@ -20,6 +24,9 @@ app.debug = True
 # Create secret key for client server interaction
 
 app.config['SECRET_KEY'] = secrets.token_hex(16)
+
+# Widen DB admin page view / PT 11
+app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True
 
 # Create config attributes
 
@@ -52,6 +59,9 @@ db = SQLAlchemy(app, metadata=metadata)
 
 migrate = Migrate(app, db)
 
+# Define QR code
+qrcode = QRcode(app)
+
 # DB tables
 
 class Post(db.Model):
@@ -75,7 +85,9 @@ class Post(db.Model):
         self.title = title
         self.body = body
         db.session.commit()
-        
+
+# PT 11 / add MFA key
+
 # Users table 
 class User(db.Model):
     __tablename__ = 'users'
@@ -91,20 +103,32 @@ class User(db.Model):
     lastname = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(100), nullable=False)
 
+    # Store MFA key and whether enabled
+    mfa_key = db.Column(db.String(100), unique=True)
+    mfa_enabled = db.Column(db.String(100), default=False)
+
     # User posts
     posts = db.relationship("Post", order_by=Post.id, back_populates="user")
 
-    # Constructor method
+    # Constructor method / pt 11 add mfa details
     def __init__(self, email, firstname, lastname, phone, password):
         self.email = email
         self.firstname = firstname
         self.lastname = lastname
         self.phone = phone
         self.password = password
+        # Store MFA key and whether enabled
+        self.mfa_key = pyotp.random_base32()
+        self.mfa_enabled = False
+        self.uri = str(pyotp.totp.TOTP('mfa_key').provisioning_uri('email', 'app'))
 
     # Check if login password = submitted password / part 7
     def verify_password(self, submitted_password):
         return self.password == submitted_password
+
+    # Check if login password = submitted password / part 7
+    def verify_mfa_pin(self, submitted_pin):
+        return pyotp.TOTP(self.mfa_key).verify(submitted_pin)
 
 # Db admin page template
 
@@ -130,7 +154,7 @@ class PostView(ModelView):
 class UserView(ModelView):
     column_display_pk = True  # optional, but I like to see the IDs in the list
     column_hide_backrefs = False
-    column_list = ('id', 'email', 'password', 'firstname', 'lastname', 'phone', 'posts')
+    column_list = ('id', 'email', 'password', 'firstname', 'lastname', 'phone', 'mfa key', 'mfa enabled', 'posts')
 
 # Create admin instance
 admin = Admin(app, name='DB Admin', template_mode='bootstrap4')
