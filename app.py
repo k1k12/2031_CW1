@@ -9,7 +9,7 @@ def index():
 
 # Handle error 429 (too many requests)
 @app.errorhandler(429)
-def function_name(e):
+def error_handler(e):
     return render_template('accounts/error429.html'), 429
 
 # Main method

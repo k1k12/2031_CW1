@@ -16,6 +16,9 @@ from datetime import datetime
 import pyotp
 from flask_qrcode import QRcode
 
+# Imports pt 12
+from flask_login import LoginManager, UserMixin
+
 # Define app
 
 app = Flask(__name__)
@@ -62,6 +65,22 @@ migrate = Migrate(app, db)
 # Define QR code
 qrcode = QRcode(app)
 
+########## Login manager ##########
+
+# Define login manager
+login_manager = LoginManager()
+
+# Initialise application
+login_manager.init_app(app)
+login_manager.login_view = 'accounts.login'
+login_manager.login_message = 'Please login to acess CSC2031 blog.'
+login_manager.login_message_category = 'info'
+
+# User loader function
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
 # DB tables
 
 class Post(db.Model):
@@ -79,17 +98,20 @@ class Post(db.Model):
         self.created = datetime.now()
         self.title = title
         self.body = body
+        # self.current_user = current_user
 
     def update(self, title, body):
         self.created = datetime.now()
         self.title = title
         self.body = body
+        # self.current_user = current_user
         db.session.commit()
 
 # PT 11 / add MFA key
+# PT 12 / ass user authentication
 
 # Users table 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -98,29 +120,34 @@ class User(db.Model):
     email = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
 
+    # Store MFA key and whether enabled
+    mfa_key = db.Column(db.String(100), unique=True)
+    uri = db.Column(db.String(100), unique=True)
+    mfa_enabled = db.Column(db.Boolean(), nullable=False, default=False)
+
+    # Store whether a user is active
+    active = db.Column(db.Boolean(), nullable=False, default=False)
+
     # User information
     firstname = db.Column(db.String(100), nullable=False)
     lastname = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(100), nullable=False)
 
-    # Store MFA key and whether enabled
-    mfa_key = db.Column(db.String(100), unique=True)
-    mfa_enabled = db.Column(db.String(100), default=False)
-
     # User posts
     posts = db.relationship("Post", order_by=Post.id, back_populates="user")
 
     # Constructor method / pt 11 add mfa details
-    def __init__(self, email, firstname, lastname, phone, password):
+    def __init__(self, email, firstname, lastname, phone, password, mfa_key, mfa_enabled):
         self.email = email
         self.firstname = firstname
         self.lastname = lastname
         self.phone = phone
         self.password = password
         # Store MFA key and whether enabled
-        self.mfa_key = pyotp.random_base32()
-        self.mfa_enabled = False
-        self.uri = str(pyotp.totp.TOTP('mfa_key').provisioning_uri('email', 'app'))
+        self.mfa_key = mfa_key
+        self.mfa_enabled = mfa_enabled
+        self.uri = str(pyotp.totp.TOTP(mfa_key).provisioning_uri(self.email, "csc2031"))
+        self.active = False
 
     # Check if login password = submitted password / part 7
     def verify_password(self, submitted_password):
@@ -129,6 +156,15 @@ class User(db.Model):
     # Check if login password = submitted password / part 7
     def verify_mfa_pin(self, submitted_pin):
         return pyotp.TOTP(self.mfa_key).verify(submitted_pin)
+
+    # Returns the users idd
+    def get_id(self):
+        return self.id
+
+    # Returns whether a user is currently active
+    @property
+    def is_active(self):
+        return self.active
 
 # Db admin page template
 
