@@ -1,7 +1,7 @@
 # Imports
 from flask import Blueprint, render_template, flash, redirect, url_for, session
 from accounts.forms import RegistrationForm, LoginForm
-from config import User, db, limiter
+from config import User, db, limiter, logger
 from flask_login import login_required, login_user, logout_user, current_user
 from markupsafe import Markup
 from datetime import datetime
@@ -44,6 +44,9 @@ def registration():
         db.session.add(new_user)
         db.session.commit()
 
+        # Log event
+        logger.warning('User: {}, Role: {}, IP Address: {}, MSG: New user successfully registered.'.format(new_user.email, new_user.role, new_user.log.latest_ip))
+
         # Display success message
         flash('Account successfully created. Please now set up MFA.', category='success')
         return render_template('accounts/mfa.html', key=new_user.mfa_key, qr=new_user.uri)
@@ -83,9 +86,16 @@ def login():
             session['num_attempts'] += 1
             # If max attempts exceeded
             if session['num_attempts'] >= MAX_LOGIN_ATTEMPTS:
+                # Log event
+                logger.warning('User: {}, No. Login Attempts: {}, IP Address: {}, MSG: User successfully locked after exceeding maximum login attempts limit.'.format(user.email, session['num_attempts'], user.log.latest_ip))
+                # Error message
                 flash(Markup('Maximum number of login attempts exceeded, account locked. <br></br> <a href="/unlock">Click here to unlock account.</a>'))
                 # Redirect to login page and hide login form
                 return render_template('accounts/login.html')
+            
+            # Log event
+            logger.warning('User: {}, No. Login Attempts: {}, IP Address: {}, MSG: User unsuccessfully attempted to login.'.format(user.email, session['num_attempts'], user.log.latest_ip))
+
             # Display warning message if authentication attempts not exceeded
             flash('Login credentials incorrect, {} attempts remaining.'.format((3 - session.get('num_attempts'))), category='danger')
             return redirect(url_for('accounts.login'))
@@ -102,6 +112,11 @@ def login():
 
             # Login user
             login_user(user)
+
+            # Log event
+            logger.warning('User: {}, Role: {}, IP Address: {}, MSG: Existing user successfully logged in.'.format(user.email, user.role, user.log.latest_ip))
+
+            # Success flash
             flash('Login successful.', category='success')
 
             # Redirect based on user role

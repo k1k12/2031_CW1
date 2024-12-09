@@ -50,4 +50,32 @@
 
                 {% endfor %}
               </table>
+
+
+              <h1> User Event Log </h1>
+
+              <table class="table table-bordered">
+                      <thead>
+                        <tr>
+                          <th scope="col">Most Recent Log Entries <em> / to max. 10</em></th>
+                        </tr>
+                      </thead>
+      
+                      {% for logger in loggers[::-1] %}
+                        
+                                {% if loop.index <= 10 %}
+                                        <tbody>
+                                                <tr>
+                                                <td>{{ logger }}</td>
+                                                </tr>
+                        
+                                        </tbody>
+                                {% endif %}
+                      {% endfor %}
+                      
+                    </table>
+      
+
+
+
 {% endblock %}

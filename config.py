@@ -67,10 +67,19 @@ login_manager.login_message_category = 'info'
 
 login_manager.init_app(app)
 
+# Logger set up
+
 # Define logger 
 logger = logging.getLogger('security_logger')
 handler = logging.FileHandler('security.log', 'w')
-# Set logging level
+# Set logging level to DEBUG
+handler.setLevel(logging.WARNING)
+# Create formatter
+formatter = logging.Formatter('%(asctime)s --> %(message)s', '%d/%m/%Y %I:%M:%S %p')
+# Set formatter
+handler.setFormatter(formatter)
+# Pass handler to logger
+logger.addHandler(handler)
 
 # Create database object
 

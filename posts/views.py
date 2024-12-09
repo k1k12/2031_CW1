@@ -1,6 +1,6 @@
 # Imports
 from flask import Blueprint, render_template, flash, url_for, redirect
-from config import db, Post
+from config import db, Post, logger
 from posts.forms import PostForm
 from sqlalchemy import desc
 from flask_login import current_user, login_required
@@ -8,6 +8,7 @@ from wrappers.roles_required import roles_required
 
 # Create instance of Blueprint
 posts_bp = Blueprint('posts', __name__, template_folder='templates')
+
 # Load webpages methods
 
 @posts_bp.route('/create', methods=('GET', 'POST'))
@@ -24,6 +25,8 @@ def create():
         # Add new post to db
         db.session.add(new_post)
         db.session.commit()
+        # Log event
+        logger.warning('User: {}, Role: {}, Post ID: {}, IP Address: {}, MSG: Post successfully created.'.format(current_user.email, current_user.role, new_post.id, current_user.log.latest_ip))
         # Show user success message
         flash('Post created', category='success')
         # Redirected to view posts
@@ -62,6 +65,10 @@ def update(id):
     # Check valid
     if form.validate_on_submit():
         post_to_update.update(title=form.title.data, body=form.body.data)
+        
+        # Log event
+        logger.warning('User: {}, Role: {}, Post ID: {}, Post Author: {}, IP Address: {}, MSG: Post successfully updated.'.format(current_user.email, current_user.role, post_to_update.id, post_to_update.user.email, current_user.log.latest_ip))
+
         # Show success message
         flash('Post updated', category='success')
         return redirect(url_for('posts.posts'))
@@ -83,9 +90,13 @@ def delete(id):
     if current_user.id != post_to_delete.userid:
         flash('You can only delete your own posts.', category='danger')
         return redirect(url_for('posts.posts'))
- 
-    post_to_delete.delete()
-    db.session.commit()
 
+    # Log event
+    logger.warning('User: {}, Role: {}, Post ID: {}, Post Author: {}, IP Address: {}, MSG: Post successfully deleted.'.format(current_user.email, current_user.role, post_to_delete.id, post_to_delete.user.email, current_user.log.latest_ip))
+
+    Post.query.filter_by(id=id).delete()
+    db.session.commit()
+    
     flash('Post deleted', category='success')
+    
     return redirect(url_for('posts.posts'))
