@@ -3,15 +3,14 @@ from flask import Blueprint, render_template, flash, redirect, url_for, session
 from accounts.forms import RegistrationForm, LoginForm
 from config import User, db, limiter
 from flask_login import login_required, login_user, logout_user, current_user
-# Imports pt 10
 from markupsafe import Markup
+from datetime import datetime
 
 # Create instance of Blueprint
 accounts_bp = Blueprint('accounts', __name__, template_folder='templates')
 
 # Create constants
 MAX_LOGIN_ATTEMPTS = 3
-UNAUTHORISED_WARNING = 'You are not authorised to access this page.'
 
 # Load webpages methods
 
@@ -39,7 +38,9 @@ def registration():
                         password=form.password.data,
                         )
         
-        # Add new user to db
+        # Create log of new user
+        new_user.generate_log()
+        # Add new user to dbs
         db.session.add(new_user)
         db.session.commit()
 
@@ -53,7 +54,6 @@ def registration():
 @accounts_bp.route('/login', methods=['GET','POST'])
 @limiter.limit('20 / minute')
 def login():
-
     # Prevent logged in users from accessing
     if current_user.is_authenticated:
         flash('Please logout to access login page.', category='danger')
@@ -96,17 +96,23 @@ def login():
             if not user.mfa_enabled:
                 user.mfa_enabled = True
                 db.session.commit()
+            
+            # Update log table
+            user.log.update()
+
             # Login user
             login_user(user)
             flash('Login successful.', category='success')
+
             # Redirect based on user role
             if user.role == 'db_admin':
                 return redirect(url_for('admin.index'))
-            if user.role == 'sec_admin':
+            elif user.role == 'sec_admin':
                 return redirect(url_for('security.security'))
             else:
                 return redirect(url_for('posts.posts'))
 
+    # Render login page
     return render_template('accounts/login.html', form=form)
 
 # Unlock function that resets key to 0 and redirects to login with form

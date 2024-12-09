@@ -2,7 +2,52 @@
 
 {% block content %}
 
-        <h1> CSC2031 Security</h1>
-        <p> Sofia French ('230057999')</p>
+        <!-- Handle and render flash images -->
+        <div>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mt-3 alert-dismissible" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" onclick=delete_flash(this)>
+                                <span>&times;</span>
+                        </button>
+                </div>
+                {% endfor %}
+                {% endwith %}
+        </div>
 
+        <h1> Log of Events: <em></em>User Registration and Login</em></h1>
+
+        <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th scope="col">Account No.</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Registered</th>
+                    <th scope="col">Latest Login</th>
+                    <th scope="col">Previous Login</th>
+                    <th scope="col">Latest IP</th>
+                    <th scope="col">Previous IP</th>
+                  </tr>
+                </thead>
+
+                {% for user in users %}
+
+                <tbody>
+                  <tr>
+                    <th scope="row">{{ user }}</th>
+                    <td>{{ user.email }}</td>
+                    <td> {{ user.role }} </td>
+                    <td> {{ user.log.reg_time }} </td>
+                    <td> {{ user.log.latest_login }} </td>
+                    <td> {{ user.log.previous_login }} </td>
+                    <td> {{ user.log.latest_ip }} </td>
+                    <td> {{ user.log.previous_ip }} </td>
+                  </tr>
+                  
+                </tbody>
+
+                {% endfor %}
+              </table>
 {% endblock %}

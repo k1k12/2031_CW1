@@ -1,9 +1,10 @@
 # Imports
-from flask import Flask, redirect, url_for, flash
+from flask import Flask, redirect, url_for, flash, request
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.menu import MenuLink
 import secrets
+import logging
 
 # imports pt 4
 
@@ -66,6 +67,11 @@ login_manager.login_message_category = 'info'
 
 login_manager.init_app(app)
 
+# Define logger 
+logger = logging.getLogger('security_logger')
+handler = logging.FileHandler('security.log', 'w')
+# Set logging level
+
 # Create database object
 
 db = SQLAlchemy(app, metadata=metadata)
@@ -86,6 +92,12 @@ def load_user(id):
 
 class Post(db.Model):
     __tablename__ = 'posts'
+
+    # set CRUD operations
+    can_create = False
+    can_edit = False
+    can_delete = False
+    
     # Declare attributes of post
     id = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -115,6 +127,11 @@ class Post(db.Model):
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
+    # set CRUD operations
+    can_create = False
+    can_edit = False
+    can_delete = False
+    
     # Primary key
     id = db.Column(db.Integer, primary_key=True)
 
@@ -137,11 +154,16 @@ class User(db.Model, UserMixin):
     lastname = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(100), nullable=False)
 
-    # User posts
+    # Define relationships
     posts = db.relationship("Post", order_by=Post.id, back_populates="user")
-
-    # Constructor method / pt 11 add mfa details
+    log = db.relationship("Log", uselist=False, back_populates="user")
+    
+    # Constructor method
     def __init__(self, email, firstname, lastname, phone, password):
+        # CRUD operations
+        # self.can_create = False
+
+        # User details
         self.email = email
         self.firstname = firstname
         self.lastname = lastname
@@ -154,17 +176,58 @@ class User(db.Model, UserMixin):
         # User role
         self.role = 'end_user'
 
-    # Check if login password = submitted password / part 7
+    # Check if login password = submitted password
     def verify_password(self, submitted_password):
         return self.password == submitted_password
 
-    # Check if login password = submitted password / part 7
+    # Check if login pin = submitted pin
     def verify_mfa_pin(self, submitted_pin):
         return pyotp.TOTP(self.mfa_key).verify(submitted_pin)
+
+    # Generate user log
+    def generate_log(self):
+        log = Log(self.id, self)
+        db.session.add(log)
+        db.session.commit()
+
+# Users table 
+class Log(db.Model):
+    __tablename__ = 'logs'
+
+    # Primary key
+    id = db.Column(db.Integer, primary_key=True)
+    # User details
+    userid = db.Column(db.Integer, db.ForeignKey('users.id'))
+    # Account creation details
+    reg_time = db.Column(db.DateTime, nullable=False)
+    latest_login = db.Column(db.DateTime, nullable=True)
+    previous_login = db.Column(db.DateTime, nullable=True)
+    # IP details
+    latest_ip = db.Column(db.String(100), nullable=True)
+    previous_ip = db.Column(db.String(100), nullable=True)
+    # Define relationship
+    user = db.relationship("User", back_populates="log")
+
+    # Constructor for log
+    def __init__(self, userid, user):
+        self.userid = userid
+        self.user = user
+        self.reg_time = datetime.now()
+        # self.latest_login = datetime.now()
+        # self.latest_ip = request.remote_addr
+        # self.previous_ip = request.remote_addr
+
+    def update(self):
+        self.previous_login = self.latest_login
+        self.latest_login = datetime.now()
+        self.previous_ip = self.latest_ip
+        self.latest_ip = request.remote_addr
+        db.session.commit()
 
 # Db admin page template
 
 class MainIndexLink(MenuLink):
+
     def get_url(self):
         return url_for('index')       
 
@@ -186,7 +249,7 @@ class PostView(ModelView):
         return current_user.get_id() and (current_user.role == 'db_admin')
 
     # Ensure user is authenticated
-    def inacessible_callback(self):
+    def inacessible_callback(self, name, *kwargs):
         if current_user.get_id():
             return redirect('errors/error403.html')
         flash('Please login before attempting to access this page.')
@@ -203,7 +266,25 @@ class UserView(ModelView):
         return current_user.get_id() and (current_user.role == 'db_admin')
 
     # Ensure user is authenticated
-    def inacessible_callback(self):
+    def inacessible_callback(self, name, *kwargs):
+        if current_user.get_id():
+            return redirect('errors/error403.html')
+        flash('Please login before attempting to access this page.')
+        return redirect(url_for('accounts.login'))
+
+# Create LogView class
+class LogView(ModelView):
+    column_display_pk = True  # optional, but I like to see the IDs in the list
+    column_hide_backrefs = False
+    column_list = ('id', 'userid', 'registered on', 'latest login', 'previous login', 'latest ip', 'previous ip', 'user')
+    
+    # Ensure user is authenticated
+    def is_accessible(self):
+        # Change back!
+        return current_user.get_id() and (current_user.role == 'db_admin')
+
+    # Ensure user is authenticated
+    def inacessible_callback(self, name, *kwargs):
         if current_user.get_id():
             return redirect('errors/error403.html')
         flash('Please login before attempting to access this page.')
@@ -222,6 +303,8 @@ admin.add_link(MainIndexLink(name='Home Page'))
 admin.add_view(PostView(Post, db.session))
 # To view data on users table
 admin.add_view(UserView(User, db.session))
+# To view data on logs table
+admin.add_view(LogView(Log, db.session))
 
 ## Implement rate limiter PT 10
 

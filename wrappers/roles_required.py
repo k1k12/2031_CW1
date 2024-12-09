@@ -7,9 +7,9 @@ def roles_required(*roles):
         @wraps(f)
         def wrapped(*args, **kwargs):
             # If current user not in roles
-            if not roles[current_user.role]:
+            if current_user.role not in roles:
                 # Render error page
-                render_template('errors/error403.html')
-                return f(*args, **kwargs)
+                return render_template('errors/error403.html')
+            return f(*args, **kwargs)
         return wrapped
     return inner_decorator

@@ -15,3 +15,5 @@ TO DO
 - login limit check test
 - Not logging out ? it worked
 - Check hiding db is right
+- Delete view for log before submission
+- change db priv back to db admin
