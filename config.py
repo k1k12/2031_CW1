@@ -65,16 +65,17 @@ migrate = Migrate(app, db)
 # Define QR code
 qrcode = QRcode(app)
 
-########## Login manager ##########
+# Login manager 
 
 # Define login manager
 login_manager = LoginManager()
 
 # Initialise application
-login_manager.init_app(app)
 login_manager.login_view = 'accounts.login'
 login_manager.login_message = 'Please login to acess CSC2031 blog.'
 login_manager.login_message_category = 'info'
+
+login_manager.init_app(app)
 
 # User loader function
 @login_manager.user_loader
@@ -94,21 +95,21 @@ class Post(db.Model):
     user = db.relationship("User", back_populates="posts")
 
     # Define constructor class
-    def __init__(self, title, body):
+    def __init__(self, title, body, userid, user):
         self.created = datetime.now()
         self.title = title
         self.body = body
-        # self.current_user = current_user
+        self.userid = userid
+        self.user = user
 
     def update(self, title, body):
         self.created = datetime.now()
         self.title = title
         self.body = body
-        # self.current_user = current_user
         db.session.commit()
 
 # PT 11 / add MFA key
-# PT 12 / ass user authentication
+# PT 12 / add user authorisation
 
 # Users table 
 class User(db.Model, UserMixin):
@@ -121,8 +122,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(100), nullable=False)
 
     # Store MFA key and whether enabled
-    mfa_key = db.Column(db.String(100), unique=True)
-    uri = db.Column(db.String(100), unique=True)
+    mfa_key = db.Column(db.String(100), nullable=True)
     mfa_enabled = db.Column(db.Boolean(), nullable=False, default=False)
 
     # Store whether a user is active
@@ -137,17 +137,16 @@ class User(db.Model, UserMixin):
     posts = db.relationship("Post", order_by=Post.id, back_populates="user")
 
     # Constructor method / pt 11 add mfa details
-    def __init__(self, email, firstname, lastname, phone, password, mfa_key, mfa_enabled):
+    def __init__(self, email, firstname, lastname, phone, password):
         self.email = email
         self.firstname = firstname
         self.lastname = lastname
         self.phone = phone
         self.password = password
         # Store MFA key and whether enabled
-        self.mfa_key = mfa_key
-        self.mfa_enabled = mfa_enabled
-        self.uri = str(pyotp.totp.TOTP(mfa_key).provisioning_uri(self.email, "csc2031"))
-        self.active = False
+        self.mfa_key = pyotp.random_base32()
+        self.mfa_enabled = False
+        self.uri = str(pyotp.totp.TOTP(self.mfa_key).provisioning_uri(self.email, "csc2031"))
 
     # Check if login password = submitted password / part 7
     def verify_password(self, submitted_password):
@@ -157,14 +156,21 @@ class User(db.Model, UserMixin):
     def verify_mfa_pin(self, submitted_pin):
         return pyotp.TOTP(self.mfa_key).verify(submitted_pin)
 
-    # Returns the users idd
-    def get_id(self):
-        return self.id
-
     # Returns whether a user is currently active
     @property
     def is_active(self):
         return self.active
+
+    # Returns whether a user is currently active
+    @property
+    def is_authenticated(self):
+        # return self.authenticated
+        return True
+
+    # Returns whether a user is currently active
+    @property
+    def is_anonymous(self):
+        return self.anonymous
 
 # Db admin page template
 

@@ -8,6 +8,8 @@ Blog website with focus on security features
 - MFA / 2FA
 
 TO DO
-- Login func when no mfa key doesnt redirect X
-- Put go to login page message in
+- Put go to login page message in registration
 - MFA key and ebanled show in DB
+- add name and student number above everything
+- not seeming to register user is logged in
+- login limit check test

@@ -27,7 +27,7 @@
     .blue-box {
         width: 500px;
         height: 400;
-        border: 1px solid rgb(6, 0, 194);
+        border: 1px solid rgb(0, 0, 255);
         padding: 20px;
         margin: 10px;
     }
@@ -37,29 +37,45 @@
 <section class='container-fluid p-3 my-3'>
 
     <nav class='nav nav-pills flex-column flex-sm-row'>
+
         <!-- Menu link home -->
         <a class='nav-item nav-link' href='{{ url_for("index") }}'>Home</a>
-
+        
         <!-- Menu link registration -->
         <a class='nav-item nav-link' href='{{ url_for("accounts.registration") }}'>Registration</a>
 
         <!-- Menu link login -->
         <a class='nav-item nav-link' href='{{ url_for("accounts.login") }}'>Login</a>
 
+        {% if user.is_authenticated %}
         <!-- Menu link account -->
         <a class='nav-item nav-link' href='{{ url_for("accounts.account") }}'>Account</a>
+        {% endif %}
 
+        {% if user.is_authenticated %}
         <!-- Menu link posts -->
         <a class='nav-item nav-link' href='{{ url_for("posts.posts") }}'>Posts</a>
+        {% endif %}
 
+        {% if user.is_authenticated %}
         <!-- Menu link create -->
         <a class='nav-item nav-link' href='{{ url_for("posts.create") }}'>Create</a>
-        
+        {% endif %}
+
+        {% if user.is_authenticated %}
         <!-- Menu link security -->
         <a class='nav-item nav-link' href='{{ url_for("security.security") }}'>Security</a>
+        {% endif %}
 
+        {% if user.is_authenticated %}
         <!-- Menu link db -->
         <a class="nav-item nav-link" href="http://127.0.0.1:5000/admin">DB Admin</a>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+        <!-- Menu link logout -->
+        <a class='nav-item nav-link' href='{{ url_for("index") }}'>Logout</a>
+        {% endif %}
 
     </nav>
 

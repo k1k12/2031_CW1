@@ -1,11 +1,10 @@
 # Imports
 from flask import Blueprint, render_template, flash, redirect, url_for, session
 from accounts.forms import RegistrationForm, LoginForm
-from config import User, db, app
+from config import User, db, limiter
+from flask_login import login_required, login_user, logout_user, current_user
 # Imports pt 10
 from markupsafe import Markup
-# Imports pt 11
-import pyotp
 
 # Create instance of Blueprint
 accounts_bp = Blueprint('accounts', __name__, template_folder='templates')
@@ -24,7 +23,7 @@ def registration():
         if User.query.filter_by(email=form.email.data).first():
             # TO DO: Add link to login page (in msg in html or markup)
             flash('An account with this email already exists.', category='danger')
-            return render_template('accounts/login.html', form=form)
+            return render_template('accounts/login.html', form=form, user=current_user)
         
         # If user isn't taken in db, create new instance to add to db
         new_user = User(email=form.email.data,
@@ -32,8 +31,6 @@ def registration():
                         lastname=form.lastname.data,
                         phone=form.phone.data,
                         password=form.password.data,
-                        mfa_key = pyotp.random_base32(),
-                        mfa_enabled = False,
                         )
         
         # Add new user to db
@@ -42,11 +39,11 @@ def registration():
 
         # Display success message
         flash('Account successfully created. Please now set up MFA.', category='success')
-        return render_template('accounts/mfa.html', key=new_user.mfa_key, qr=new_user.uri)
+        return render_template('accounts/mfa.html', key=new_user.mfa_key, qr=new_user.uri, user=current_user)
 
-    return render_template('accounts/registration.html', form=form)
+    return render_template('accounts/registration.html', form=form, user=current_user)
 
-from config import limiter
+# Pt 12
 # Add limiter for testing
 @accounts_bp.route('/login', methods=['GET','POST'])
 @limiter.limit('20 / minute')
@@ -64,6 +61,7 @@ def login():
         # Define a var to represent finding user in db
         user = User.query.filter_by(email=form.email.data).first()
         # Check user exists and passwords match
+        # Ugly fix this
         if not user or not user.verify_password(form.password.data) or not user.verify_mfa_pin(form.mfa_pin.data):
             # Check if have done MFA
             if user and user.verify_password(form.password.data):
@@ -87,10 +85,13 @@ def login():
             # Check if user has set up MFA
             if not user.mfa_enabled:
                 user.mfa_enabled = True
+                db.session.commit()
+            # Login user
+            login_user(user)
             flash('Login successful.', category='success')
             return redirect(url_for('posts.posts'))
 
-    return render_template('accounts/login.html', form=form)
+    return render_template('accounts/login.html', form=form, user=current_user)
 
 # Unlock function that resets key to 0 and redirects to login with form
 @accounts_bp.route('/unlock', methods=['GET'])
@@ -98,8 +99,13 @@ def unlock():
     # Destroy session key
     session.pop('num_attempts')
     # Rerender page with form
-    return redirect(url_for('accounts.login'))
+    return redirect(url_for('accounts.login'), user=current_user)
 
 @accounts_bp.route('/account')
 def account():
-    return render_template('accounts/account.html')
+    return render_template('accounts/account.html', user=current_user)
+
+@login_required
+def logout():
+    logout_user()
+    return render_template('home/index.html', user=current_user)
