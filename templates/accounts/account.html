@@ -28,7 +28,7 @@
                         <!-- Show account information -->
 
                         <!-- If current user not none (anon) -->
-                        {% if user %}
+                        {% if user.is_authenticated %}
                         <div class="container-fluid", style="border: 1px solid rgb(0, 0, 255)">
                                 <p style="text-align: left"> Account No: {{ user.id }} </p>
                                 <p style="text-align: left"> Email: {{ user.email }} </p>

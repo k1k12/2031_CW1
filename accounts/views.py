@@ -16,6 +16,11 @@ MAX_LOGIN_ATTEMPTS = 3
 
 @accounts_bp.route('/registration', methods=['GET','POST'])
 def registration():
+    # Prevent logged in users from accessing
+    if current_user.is_authenticated:
+        flash('Please logout to access registration page.', category='danger')
+        return render_template('home/index.html')
+                        
     form = RegistrationForm()
     # If user valid
     if form.validate_on_submit():
@@ -23,7 +28,7 @@ def registration():
         if User.query.filter_by(email=form.email.data).first():
             # TO DO: Add link to login page (in msg in html or markup)
             flash('An account with this email already exists.', category='danger')
-            return render_template('accounts/login.html', form=form, user=current_user)
+            return render_template('accounts/login.html', form=form)
         
         # If user isn't taken in db, create new instance to add to db
         new_user = User(email=form.email.data,
@@ -39,9 +44,9 @@ def registration():
 
         # Display success message
         flash('Account successfully created. Please now set up MFA.', category='success')
-        return render_template('accounts/mfa.html', key=new_user.mfa_key, qr=new_user.uri, user=current_user)
+        return render_template('accounts/mfa.html', key=new_user.mfa_key, qr=new_user.uri)
 
-    return render_template('accounts/registration.html', form=form, user=current_user)
+    return render_template('accounts/registration.html', form=form)
 
 # Pt 12
 # Add limiter for testing
@@ -49,6 +54,11 @@ def registration():
 @limiter.limit('20 / minute')
 def login():
 
+    # Prevent logged in users from accessing
+    if current_user.is_authenticated:
+        flash('Please logout to access login page.', category='danger')
+        return render_template('home/index.html')
+     
     # Define session key if not already defined
     if not session.get('num_attempts'):
         session['num_attempts'] = 0
@@ -91,7 +101,7 @@ def login():
             flash('Login successful.', category='success')
             return redirect(url_for('posts.posts'))
 
-    return render_template('accounts/login.html', form=form, user=current_user)
+    return render_template('accounts/login.html', form=form)
 
 # Unlock function that resets key to 0 and redirects to login with form
 @accounts_bp.route('/unlock', methods=['GET'])
@@ -99,13 +109,15 @@ def unlock():
     # Destroy session key
     session.pop('num_attempts')
     # Rerender page with form
-    return redirect(url_for('accounts.login'), user=current_user)
+    return redirect(url_for('accounts.login'))
 
 @accounts_bp.route('/account')
+@login_required
 def account():
     return render_template('accounts/account.html', user=current_user)
 
 @login_required
 def logout():
     logout_user()
-    return render_template('home/index.html', user=current_user)
+    flash('You have been logged out.', category='success')
+    return render_template('home/index.html')

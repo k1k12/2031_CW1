@@ -1,5 +1,5 @@
 # Imports
-from flask import Flask, url_for
+from flask import Flask, redirect, url_for, flash
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.menu import MenuLink
@@ -17,7 +17,7 @@ import pyotp
 from flask_qrcode import QRcode
 
 # Imports pt 12
-from flask_login import LoginManager, UserMixin
+from flask_login import LoginManager, UserMixin, current_user
 
 # Define app
 
@@ -54,6 +54,18 @@ metadata = MetaData(
     }
 )
 
+# Login manager 
+
+# Define login manager
+login_manager = LoginManager()
+
+# Initialise application
+login_manager.login_view = 'accounts.login'
+login_manager.login_message = 'Please login to access CSC2031 blog.'
+login_manager.login_message_category = 'info'
+
+login_manager.init_app(app)
+
 # Create database object
 
 db = SQLAlchemy(app, metadata=metadata)
@@ -64,18 +76,6 @@ migrate = Migrate(app, db)
 
 # Define QR code
 qrcode = QRcode(app)
-
-# Login manager 
-
-# Define login manager
-login_manager = LoginManager()
-
-# Initialise application
-login_manager.login_view = 'accounts.login'
-login_manager.login_message = 'Please login to acess CSC2031 blog.'
-login_manager.login_message_category = 'info'
-
-login_manager.init_app(app)
 
 # User loader function
 @login_manager.user_loader
@@ -115,6 +115,7 @@ class Post(db.Model):
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
+    # Primary key
     id = db.Column(db.Integer, primary_key=True)
 
     # User authentication information
@@ -156,22 +157,6 @@ class User(db.Model, UserMixin):
     def verify_mfa_pin(self, submitted_pin):
         return pyotp.TOTP(self.mfa_key).verify(submitted_pin)
 
-    # Returns whether a user is currently active
-    @property
-    def is_active(self):
-        return self.active
-
-    # Returns whether a user is currently active
-    @property
-    def is_authenticated(self):
-        # return self.authenticated
-        return True
-
-    # Returns whether a user is currently active
-    @property
-    def is_anonymous(self):
-        return self.anonymous
-
 # Db admin page template
 
 class MainIndexLink(MenuLink):
@@ -179,7 +164,6 @@ class MainIndexLink(MenuLink):
         return url_for('index')       
 
 # Override model view class with post view
-
 class PostView(ModelView):
     column_display_pk = True  
     column_hide_backrefs = False
@@ -192,11 +176,33 @@ class PostView(ModelView):
         self.body = body
         db.session.commit()
 
+    # Ensure user is authenticated
+    def is_accessible(self):
+        return current_user.get_id()
+
+    # Ensure user is authenticated
+    def inacessible_callback(self):
+        if current_user.get_id():
+            return redirect('errors/error403.html')
+        flash('Please login before attempting to access this page.')
+        return redirect(url_for('accounts.login'))
+
 # Create UserView class
 class UserView(ModelView):
     column_display_pk = True  # optional, but I like to see the IDs in the list
     column_hide_backrefs = False
     column_list = ('id', 'email', 'password', 'firstname', 'lastname', 'phone', 'mfa key', 'mfa enabled', 'posts')
+    
+    # Ensure user is authenticated
+    def is_accessible(self):
+        return current_user.get_id()
+
+    # Ensure user is authenticated
+    def inacessible_callback(self):
+        if current_user.get_id():
+            return redirect('errors/error403.html')
+        flash('Please login before attempting to access this page.')
+        return redirect(url_for('accounts.login'))
 
 # Create admin instance
 admin = Admin(app, name='DB Admin', template_mode='bootstrap4')
@@ -209,7 +215,6 @@ admin.add_link(MainIndexLink(name='Home Page'))
 
 # To view data on posts table
 admin.add_view(PostView(Post, db.session))
-
 # To view data on users table
 admin.add_view(UserView(User, db.session))
 

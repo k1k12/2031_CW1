@@ -13,3 +13,5 @@ TO DO
 - add name and student number above everything
 - not seeming to register user is logged in
 - login limit check test
+- Not logging out ? it worked
+- Check hiding db is right

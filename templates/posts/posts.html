@@ -41,12 +41,15 @@
                                                 </div>
                                                 <div class="card-body">{{ post.body }}</div>
 
+                                                <!-- Hide update and delete links if not author -->
+                                                {% if current_user.id == post.user.id %}
                                                 <div class="card-footer">
                                                     <!-- Add update link for each post -->
                                                     <a class="navbar-item" href="{{ url_for('posts.update', id=post.id) }}">Update</a>
                                                     <!-- Add delete link for each post -->
                                                     <a class="navbar-item" href="{{ url_for('posts.delete', id=post.id) }}">Delete</a>
                                                 </div>
+                                                {% endif %}
                                                 
                                         </div>
                                         <br>
