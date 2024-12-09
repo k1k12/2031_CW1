@@ -1,11 +1,10 @@
-# Imports + pt 5
+# Imports
 from flask import Blueprint, render_template, flash, url_for, redirect
-# import flask_login
 from config import db, Post
 from posts.forms import PostForm
 from sqlalchemy import desc
-# Pt 12
 from flask_login import current_user, login_required
+from wrappers.roles_required import roles_required
 
 # Create instance of Blueprint
 posts_bp = Blueprint('posts', __name__, template_folder='templates')
@@ -13,11 +12,8 @@ posts_bp = Blueprint('posts', __name__, template_folder='templates')
 
 @posts_bp.route('/create', methods=('GET', 'POST'))
 @login_required
+@roles_required('end_user')
 def create():
-    # Prevent unauthorised users from accessing
-    if current_user.role != 'end_user':
-        return render_template('errors/error403.html')
-     
     # Create form instance
     form = PostForm()
 
@@ -37,11 +33,8 @@ def create():
 
 @posts_bp.route('/posts')
 @login_required
+@roles_required('end_user')
 def posts():
-    # Prevent unauthorised users from accessing
-    if current_user.role != 'end_user':
-        return render_template('errors/error403.html')
-     
     # Posts retrieved from database 
     all_posts = Post.query.order_by(desc('id')).all()
     return render_template('posts/posts.html', posts=all_posts)
@@ -49,11 +42,8 @@ def posts():
 # Including ID value (int) and allow handling of GET and POST requests
 @posts_bp.route('/<int:id>/update', methods=('GET', 'POST'))
 @login_required
+@roles_required('end_user')
 def update(id):
-    # Prevent unauthorised users from accessing
-    if current_user.role != 'end_user':
-        return render_template('errors/error403.html')
-     
     # Post queried from db Post table
     post_to_update = Post.query.filter_by(id=id).first()
 
@@ -84,11 +74,8 @@ def update(id):
 # Add delete route
 @posts_bp.route('/<int:id>/delete')
 @login_required
+@roles_required('end_user')
 def delete(id):
-    # Prevent unauthorised users from accessing
-    if current_user.role != 'end_user':
-        return render_template('errors/error403.html')
-     
     # Identify post to delete
     post_to_delete = Post.query.filter_by(id=id).first()
 
