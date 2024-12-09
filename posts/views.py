@@ -14,6 +14,10 @@ posts_bp = Blueprint('posts', __name__, template_folder='templates')
 @posts_bp.route('/create', methods=('GET', 'POST'))
 @login_required
 def create():
+    # Prevent unauthorised users from accessing
+    if current_user.role != 'end_user':
+        return render_template('errors/error403.html')
+     
     # Create form instance
     form = PostForm()
 
@@ -34,6 +38,10 @@ def create():
 @posts_bp.route('/posts')
 @login_required
 def posts():
+    # Prevent unauthorised users from accessing
+    if current_user.role != 'end_user':
+        return render_template('errors/error403.html')
+     
     # Posts retrieved from database 
     all_posts = Post.query.order_by(desc('id')).all()
     return render_template('posts/posts.html', posts=all_posts)
@@ -42,7 +50,10 @@ def posts():
 @posts_bp.route('/<int:id>/update', methods=('GET', 'POST'))
 @login_required
 def update(id):
-
+    # Prevent unauthorised users from accessing
+    if current_user.role != 'end_user':
+        return render_template('errors/error403.html')
+     
     # Post queried from db Post table
     post_to_update = Post.query.filter_by(id=id).first()
 
@@ -74,6 +85,10 @@ def update(id):
 @posts_bp.route('/<int:id>/delete')
 @login_required
 def delete(id):
+    # Prevent unauthorised users from accessing
+    if current_user.role != 'end_user':
+        return render_template('errors/error403.html')
+     
     # Identify post to delete
     post_to_delete = Post.query.filter_by(id=id).first()
 

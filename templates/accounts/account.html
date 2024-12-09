@@ -35,6 +35,9 @@
                                 <p style="text-align: left"> First Name: {{ user.firstname }} </p>
                                 <p style="text-align: left"> Last Name: {{ user.lastname }} </p>
                                 <p style="text-align: left"> Phone No: {{ user.phone }} </p>
+                                
+                                <!-- Only show posts if end user -->
+                                {% if user.is_authenticated and user.role == 'end_user' %}
                                 <p style="text-align: left"> Posts: </p>
 
                                 <!-- Render posts -->
@@ -57,9 +60,11 @@
                                         </div>
                                         
                                 </div>
+                                
                                 <br>
-                             {% endfor %}
-                
+                                {% endfor %}
+                                {% endif %}
+
                         </div>
                         {% endif %}
                 </div>

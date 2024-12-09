@@ -56,29 +56,29 @@
         <a class='nav-item nav-link' href='{{ url_for("accounts.account") }}'>Account</a>
         {% endif %}
 
-        {% if current_user.is_authenticated %}
+        {% if current_user.is_authenticated and current_user.role == 'end_user' %}  
         <!-- Menu link posts -->
         <a class='nav-item nav-link' href='{{ url_for("posts.posts") }}'>Posts</a>
         {% endif %}
 
-        {% if current_user.is_authenticated %}
+        {% if current_user.is_authenticated and current_user.role == 'end_user' %}  
         <!-- Menu link create -->
         <a class='nav-item nav-link' href='{{ url_for("posts.create") }}'>Create</a>
         {% endif %}
 
-        {% if current_user.is_authenticated %}
+        {% if current_user.is_authenticated and current_user.role == 'sec_admin' %}  
         <!-- Menu link security -->
         <a class='nav-item nav-link' href='{{ url_for("security.security") }}'>Security</a>
         {% endif %}
 
-        {% if current_user.is_authenticated %}
+        {% if current_user.is_authenticated and current_user.role == 'db_admin' %}  
         <!-- Menu link db -->
         <a class="nav-item nav-link" href="http://127.0.0.1:5000/admin">DB Admin</a>
         {% endif %}
 
         {% if current_user.is_authenticated %}
         <!-- Menu link logout -->
-        <a class='nav-item nav-link' href='{{ url_for("index") }}'>Logout</a>
+        <a class='nav-item nav-link' href='{{ url_for("accounts.logout") }}'>Logout</a>
         {% endif %}
 
     </nav>

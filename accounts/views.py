@@ -9,8 +9,9 @@ from markupsafe import Markup
 # Create instance of Blueprint
 accounts_bp = Blueprint('accounts', __name__, template_folder='templates')
 
-# Create constant for login attempts
+# Create constants
 MAX_LOGIN_ATTEMPTS = 3
+UNAUTHORISED_WARNING = 'You are not authorised to access this page.'
 
 # Load webpages methods
 
@@ -48,8 +49,7 @@ def registration():
 
     return render_template('accounts/registration.html', form=form)
 
-# Pt 12
-# Add limiter for testing
+# Add limiter
 @accounts_bp.route('/login', methods=['GET','POST'])
 @limiter.limit('20 / minute')
 def login():
@@ -99,7 +99,13 @@ def login():
             # Login user
             login_user(user)
             flash('Login successful.', category='success')
-            return redirect(url_for('posts.posts'))
+            # Redirect based on user role
+            if user.role == 'db_admin':
+                return redirect(url_for('admin.index'))
+            if user.role == 'sec_admin':
+                return redirect(url_for('security.security'))
+            else:
+                return redirect(url_for('posts.posts'))
 
     return render_template('accounts/login.html', form=form)
 
@@ -116,8 +122,9 @@ def unlock():
 def account():
     return render_template('accounts/account.html', user=current_user)
 
+@accounts_bp.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out.', category='success')
+    flash('You have been successfully logged out.', category='success')
     return render_template('home/index.html')

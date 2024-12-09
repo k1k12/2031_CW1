@@ -122,6 +122,9 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
 
+    # User role
+    role = db.Column(db.String(100), nullable=False, default='end_user')
+
     # Store MFA key and whether enabled
     mfa_key = db.Column(db.String(100), nullable=True)
     mfa_enabled = db.Column(db.Boolean(), nullable=False, default=False)
@@ -148,6 +151,8 @@ class User(db.Model, UserMixin):
         self.mfa_key = pyotp.random_base32()
         self.mfa_enabled = False
         self.uri = str(pyotp.totp.TOTP(self.mfa_key).provisioning_uri(self.email, "csc2031"))
+        # User role
+        self.role = 'end_user'
 
     # Check if login password = submitted password / part 7
     def verify_password(self, submitted_password):
@@ -178,7 +183,7 @@ class PostView(ModelView):
 
     # Ensure user is authenticated
     def is_accessible(self):
-        return current_user.get_id()
+        return current_user.get_id() and (current_user.role == 'db_admin')
 
     # Ensure user is authenticated
     def inacessible_callback(self):
@@ -195,7 +200,7 @@ class UserView(ModelView):
     
     # Ensure user is authenticated
     def is_accessible(self):
-        return current_user.get_id()
+        return current_user.get_id() and (current_user.role == 'db_admin')
 
     # Ensure user is authenticated
     def inacessible_callback(self):
