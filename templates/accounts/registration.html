@@ -36,24 +36,40 @@
                                         <div class="form-group">
                                                 {{ form.firstname.label}}<span style="color: red">*</span>
                                                 {{ form.firstname(class="form-control") }}
+                                                <!-- Display error message -->
+                                                {% for error in form.firstname.errors %}
+                                                        {{ error }}
+                                                {% endfor %}
                                         </div>
 
                                         <!-- Render lastname input field and label-->
                                         <div class="form-group">
                                                 {{ form.lastname.label}}<span style="color: red">*</span>
                                                 {{ form.lastname(class="form-control") }}
+                                                <!-- Display error message -->
+                                                {% for error in form.lastname.errors %}
+                                                        {{ error }}
+                                                {% endfor %}
                                         </div>
 
                                         <!-- Render email input field and a text label -->
                                         <div class="form-group">
                                                 {{ form.email.label}}<span style="color: red">*</span>
                                                 {{ form.email(class="form-control") }}
+                                                <!-- Display error message -->
+                                                {% for error in form.email.errors %}
+                                                        {{ error }}
+                                                {% endfor %}
                                         </div>
 
                                         <!-- Render phone input field and label-->
                                         <div class="form-group">
                                                 {{ form.phone.label}}<span style="color: red">*</span>
                                                 {{ form.phone(class="form-control") }}
+                                                <!-- Display error message -->
+                                                {% for error in form.phone.errors %}
+                                                        {{ error }}
+                                                {% endfor %}
                                         </div>
 
                                         <!-- Render password input field and label-->
@@ -74,6 +90,7 @@
                                                 {% for error in form.confirm_password.errors %}
                                                         {{ error }}
                                                 {% endfor %}
+                                        
                                                 
                                         </div>
                                 </div>
