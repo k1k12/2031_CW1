@@ -23,3 +23,5 @@ TO DO
 - private key is stored with 'b' binary
 - do i need format string attack prevention?
 - Check if is_active property is true
+- Does secret key in .env need to be unique
+

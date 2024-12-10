@@ -1,21 +1,29 @@
 # Imports
+# Encoding, monitoring and generation imports
 import base64
+import secrets
+import logging
+import pyotp
+import os
+# DB, encryption & security imports
+from sqlalchemy import MetaData
+from datetime import datetime
+from argon2 import PasswordHasher
+from cryptography.fernet import Fernet
+from hashlib import scrypt
+from dotenv import load_dotenv
+# Flask imports
 from flask import Flask, redirect, url_for, flash, request
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.menu import MenuLink
-import secrets
-import logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from sqlalchemy import MetaData
-from datetime import datetime
-import pyotp
 from flask_qrcode import QRcode
 from flask_login import LoginManager, UserMixin, current_user
-from argon2 import PasswordHasher
-from cryptography.fernet import Fernet
-from hashlib import scrypt
+
+# Read values from env file
+load_dotenv()
 
 # Define app
 
@@ -23,25 +31,21 @@ app = Flask(__name__)
 app.debug = True
 
 # Create secret key for client server interaction
-
-app.config['SECRET_KEY'] = secrets.token_hex(16)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # Widen DB admin page view / PT 11
-app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True
+app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True if os.getenv('FLASK_ADMIN_FLUID_LAYOUT') == 'True' else False
 
 # Create config attributes
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///csc2031blog.db'
-app.config['SQLALCHEMY_ECHO'] = True
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_ECHO'] = os.getenv('SQLALCHEMY_ECHO')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True if os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS') == 'True' else False
 
 # Create reCAPTCHA keys
-
-app.config['RECAPTCHA_PUBLIC_KEY'] = '6Lcefo8qAAAAAJ3mwVv8jeehCR67ZQCFmwL9Oe-0'
-app.config['RECAPTCHA_PRIVATE_KEY'] = '6Lcefo8qAAAAAME-BjaTPB0X_nUO5snj8yfOdAmb'
+app.config['RECAPTCHA_PUBLIC_KEY'] = os.getenv('RECAPTCHA_PUBLIC_KEY')
+app.config['RECAPTCHA_PRIVATE_KEY'] = os.getenv('RECAPTCHA_PRIVATE_KEY')
 
 # Create metadata variable 
-
 metadata = MetaData(
     naming_convention={
     "ix": 'ix_%(column_0_label)s',

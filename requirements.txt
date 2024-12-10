@@ -30,4 +30,9 @@ argon2-cffi
 # PT 17
 cryptography
 base-64 #Check
+
+# PT 18
 email_validator
+
+# PT 19
+python-dotenv
