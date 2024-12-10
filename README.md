@@ -8,23 +8,10 @@ Blog website with focus on security features
 - MFA / 2FA
 
 TO DO
-- Fix ugly pages
 - Put go to login page message in registration
-- MFA key and ebanled show in DB
-- add name and student number above everything
-- not seeming to register user is logged in
 - login limit check test
-- Not logging out ? it worked
-- Check hiding db is right
-- Delete view for log before submission
 - reset default to db admin
-- do CRUD
 - sometimes password verify hash error
-- check key is derived at runtime
-- private key is stored with 'b' binary
 - do i need format string attack prevention?
 - Check if is_active property is true
-- Does secret key in .env need to be unique
 - Check don't need to call error in code
-- check regex for conditions for waf
-- check location of waf function

@@ -61,7 +61,7 @@
                         </tr>
                       </thead>
       
-                      {% for logger in loggers[::-1] %}
+                      {% for logger in loggers[:-10:-1] %}
                         
                                 {% if loop.index <= 10 %}
                                         <tbody>

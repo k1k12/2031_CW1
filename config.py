@@ -10,6 +10,7 @@ import re
 from sqlalchemy import MetaData
 from datetime import datetime
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from cryptography.fernet import Fernet
 from hashlib import scrypt
 from dotenv import load_dotenv
@@ -76,7 +77,7 @@ def load_user(id):
 
 # Define logger 
 logger = logging.getLogger('security_logger')
-handler = logging.FileHandler('security.log', 'w')
+handler = logging.FileHandler('security.log', 'a')
 # Set logging level to DEBUG
 handler.setLevel(logging.WARNING)
 # Create formatter
@@ -114,11 +115,6 @@ qrcode = QRcode(app)
 class Post(db.Model):
     __tablename__ = 'posts'
 
-    # set CRUD operations
-    can_create = False
-    can_edit = False
-    can_delete = False
-    
     # Declare attributes of post
     id = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -148,16 +144,10 @@ class Post(db.Model):
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
-    # set CRUD operations
-    can_create = False
-    can_edit = False
-    can_delete = False
-    
     # Primary key
     id = db.Column(db.Integer, primary_key=True)
 
     # Generate private key
-    private_key = db.Column(db.String(100), nullable=True)
     salt = db.Column(db.String(100), nullable=False)
 
     # User authentication information
@@ -195,8 +185,6 @@ class User(db.Model, UserMixin):
         self.lastname = lastname
         self.phone = phone
         self.password_hash = password_hash
-        # Store whether user active
-        self.active = self.is_active
         # Store MFA key and whether enabled
         self.mfa_key = pyotp.random_base32()
         self.uri = str(pyotp.totp.TOTP(self.mfa_key).provisioning_uri(self.email, "csc2031"))
@@ -205,16 +193,13 @@ class User(db.Model, UserMixin):
         self.role = 'end_user'
         # Private key
         self.salt = base64.b64encode(secrets.token_bytes(32)).decode()
-        self.private_key = base64.b64encode(scrypt( password = 'password'.encode(), 
-                                  salt = self.salt.encode(), 
-                                  n=2048, 
-                                  r=8, 
-                                  p=1, 
-                                  dklen=32 ))
 
     # Check if login password = submitted password
     def verify_password(self, submitted_password):
-        return ph.verify(self.password_hash, submitted_password)
+        try:
+            return ph.verify(self.password_hash,submitted_password)
+        except VerifyMismatchError:
+            return False
 
     # Check if login pin = submitted pin
     def verify_mfa_pin(self, submitted_pin):
@@ -228,12 +213,22 @@ class User(db.Model, UserMixin):
 
     # Encrypt and encode a string
     def encrypt_msg(self, plain_text):
-        cipher = Fernet(self.private_key)
+        cipher = Fernet(base64.b64encode(scrypt( password = 'password'.encode(), 
+                            salt = self.salt.encode(), 
+                            n=2048, 
+                            r=8, 
+                            p=1, 
+                            dklen=32 )))
         return cipher.encrypt(plain_text.encode())
     
     # Decrypt and dencode a string
     def decrypt_msg(self, encrypted_text):
-        cipher = Fernet(self.private_key)
+        cipher = Fernet(base64.b64encode(scrypt( password = 'password'.encode(), 
+                            salt = self.salt.encode(), 
+                            n=2048, 
+                            r=8, 
+                            p=1, 
+                            dklen=32 )))
         return cipher.decrypt(encrypted_text).decode()
     
 
@@ -280,6 +275,10 @@ class MainIndexLink(MenuLink):
 
 # Override model view class with post view
 class PostView(ModelView):
+    # set CRUD operations
+    can_create = False
+    can_edit = False
+    can_delete = False
     column_display_pk = True  
     column_hide_backrefs = False
     column_list = ('id', 'userid', 'created', 'title', 'body', 'user')

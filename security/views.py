@@ -13,10 +13,7 @@ security_bp = Blueprint('security', __name__, template_folder='templates')
 @login_required
 @roles_required('sec_admin')
 def security():
-    all_loggers = []
-    file = open('security.log', 'r')
-    data = file.read()
-    for line in data.splitlines():
-        all_loggers.append(line)
+    with open('security.log', 'r') as file:
+        file = file.readlines()
     all_users = User.query.order_by(desc('id')).all()
-    return render_template('security/security.html', users=all_users, loggers=all_loggers)
+    return render_template('security/security.html', users=all_users, loggers=file)

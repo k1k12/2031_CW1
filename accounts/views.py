@@ -59,6 +59,7 @@ def registration():
 
 # Add limiter
 @accounts_bp.route('/login', methods=['GET','POST'])
+# 3 for testing
 @limiter.limit('20 / minute')
 def login():
     # Prevent logged in users from accessing
@@ -140,7 +141,7 @@ def login():
 @accounts_bp.route('/unlock', methods=['GET'])
 def unlock():
     # Destroy session key
-    session.pop('num_attempts')
+    session['num_attempts'] = 0
     # Rerender page with form
     return redirect(url_for('accounts.login'))
 
