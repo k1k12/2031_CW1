@@ -1,4 +1,5 @@
 # Imports
+import base64
 from flask import Flask, redirect, url_for, flash, request
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
@@ -14,6 +15,7 @@ from flask_qrcode import QRcode
 from flask_login import LoginManager, UserMixin, current_user
 from argon2 import PasswordHasher
 from cryptography.fernet import Fernet
+from hashlib import scrypt
 
 # Define app
 
@@ -141,6 +143,7 @@ class User(db.Model, UserMixin):
 
     # Generate private key
     private_key = db.Column(db.String(100), nullable=True)
+    salt = db.Column(db.String(100), nullable=False)
 
     # User authentication information
     email = db.Column(db.String(100), nullable=False, unique=True)
@@ -184,7 +187,13 @@ class User(db.Model, UserMixin):
         # User role
         self.role = 'end_user'
         # Private key
-        self.private_key = Fernet.generate_key()
+        self.salt = base64.b64encode(secrets.token_bytes(32)).decode()
+        self.private_key = base64.b64encode(scrypt( password = 'password'.encode(), 
+                                  salt = self.salt.encode(), 
+                                  n=2048, 
+                                  r=8, 
+                                  p=1, 
+                                  dklen=32 ))
 
     # Check if login password = submitted password
     def verify_password(self, submitted_password):
@@ -202,12 +211,12 @@ class User(db.Model, UserMixin):
 
     # Encrypt and encode a string
     def encrypt_msg(self, plain_text):
-        cipher = Fernet(self.private_key.decode())
+        cipher = Fernet(self.private_key)
         return cipher.encrypt(plain_text.encode())
     
     # Decrypt and dencode a string
     def decrypt_msg(self, encrypted_text):
-        cipher = Fernet(self.private_key.decode())
+        cipher = Fernet(self.private_key)
         return cipher.decrypt(encrypted_text).decode()
     
 

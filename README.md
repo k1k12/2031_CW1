@@ -21,3 +21,7 @@ TO DO
 - do CRUD
 - user with account and password right but not enabled mfa errors
 - sometimes password verify hash error
+- check key is derived at runtime
+- private key is stored with 'b' binary
+- do i need format string attack prevention?
+- 
