@@ -180,6 +180,8 @@ class User(db.Model, UserMixin):
         self.lastname = lastname
         self.phone = phone
         self.password_hash = password_hash
+        # Store whether user active
+        self.active = self.is_active
         # Store MFA key and whether enabled
         self.mfa_key = pyotp.random_base32()
         self.uri = str(pyotp.totp.TOTP(self.mfa_key).provisioning_uri(self.email, "csc2031"))

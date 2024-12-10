@@ -29,4 +29,5 @@ argon2-cffi
 
 # PT 17
 cryptography
-base-64
+base-64 #Check
+email_validator

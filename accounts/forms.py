@@ -1,17 +1,35 @@
 # Imports pt 6
 from flask_wtf import FlaskForm, RecaptchaField
 from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, EqualTo, Length, Regexp
+from wtforms.validators import DataRequired, EqualTo, Length, Regexp, Email
 
 # Registration class
 class RegistrationForm(FlaskForm):
 
     # Validate fields 
-    firstname = StringField('First Name',validators=[DataRequired()])
-    lastname = StringField('Last Name',validators=[DataRequired()])
-    email = StringField('Email Address',validators=[DataRequired()])
-    phone = StringField('Phone Number',validators=[DataRequired()])
-    # PART 7
+    firstname = StringField('First Name',
+                            validators=
+            [DataRequired(),
+             Regexp('(?=.*[a-zA-Z-])', message='First name must only contain letters or hyphens.')
+             ])
+    lastname = StringField('Last Name',
+                           validators=
+            [DataRequired(),
+             Regexp('(?=.*[a-zA-Z-])', message='Last name must only contain letters or hyphens.')
+             ])
+    email = StringField('Email Address',
+                        validators=
+            [DataRequired(),
+            Email()
+            ])
+    phone = StringField('Phone Number',
+                        validators=
+            [DataRequired(),
+            #  E.164 standard validation
+             Regexp(r'(?:02\d-\d{8}|(?:011\d|01\d1)-\d{7}|01\d{3}-\d{5,6})', message='Invalid phone number: please adhere to E.164 standards.')
+            
+            ])
+ 
     # Check password (p) is 7 < p < 16, checks contains min 1 uppercase char, 1 lowercase char, 1 digit and 1 special char
     password = PasswordField('Password',
                              validators=[
@@ -26,7 +44,7 @@ class RegistrationForm(FlaskForm):
 
 # Login Form class / part 7
 class LoginForm(FlaskForm):
-    # Validate fields 
+    # Validate fields
     email = StringField('Email Address',validators=[DataRequired()])
     password = PasswordField('Password',validators=[DataRequired()])
     # MFA pin / part 11
