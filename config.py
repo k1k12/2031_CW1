@@ -13,6 +13,7 @@ import pyotp
 from flask_qrcode import QRcode
 from flask_login import LoginManager, UserMixin, current_user
 from argon2 import PasswordHasher
+from cryptography.fernet import Fernet
 
 # Define app
 
@@ -111,11 +112,11 @@ class Post(db.Model):
 
     # Define constructor class
     def __init__(self, title, body, userid, user):
-        self.created = datetime.now()
-        self.title = title
-        self.body = body
-        self.userid = userid
         self.user = user
+        self.created = datetime.now()
+        self.title = self.user.decrypt_msg(title)
+        self.body = self.user.decrypt_msg(body)
+        self.userid = userid
 
     def update(self, title, body):
         self.created = datetime.now()
@@ -137,6 +138,9 @@ class User(db.Model, UserMixin):
     
     # Primary key
     id = db.Column(db.Integer, primary_key=True)
+
+    # Generate private key
+    private_key = db.Column(db.String(100), nullable=True)
 
     # User authentication information
     email = db.Column(db.String(100), nullable=False, unique=True)
@@ -179,6 +183,8 @@ class User(db.Model, UserMixin):
         self.mfa_enabled = False
         # User role
         self.role = 'end_user'
+        # Private key
+        self.private_key = Fernet.generate_key()
 
     # Check if login password = submitted password
     def verify_password(self, submitted_password):
@@ -193,6 +199,17 @@ class User(db.Model, UserMixin):
         log = Log(self.id, self)
         db.session.add(log)
         db.session.commit()
+
+    # Encrypt and encode a string
+    def encrypt_msg(self, plain_text):
+        cipher = Fernet(self.private_key.decode())
+        return cipher.encrypt(plain_text.encode())
+    
+    # Decrypt and dencode a string
+    def decrypt_msg(self, encrypted_text):
+        cipher = Fernet(self.private_key.decode())
+        return cipher.decrypt(encrypted_text).decode()
+    
 
 # Users table 
 class Log(db.Model):

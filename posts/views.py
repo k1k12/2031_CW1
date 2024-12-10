@@ -1,6 +1,6 @@
 # Imports
 from flask import Blueprint, render_template, flash, url_for, redirect
-from config import db, Post, logger
+from config import db, Post, logger, Fernet
 from posts.forms import PostForm
 from sqlalchemy import desc
 from flask_login import current_user, login_required
@@ -20,8 +20,11 @@ def create():
 
     # Check valid
     if form.validate_on_submit():
+        # Encrypt title and body
+        encrypted_title = current_user.encrypt_msg(form.title.data)
+        encrypted_body = current_user.encrypt_msg(form.body.data)
         # New instance of post model created
-        new_post = Post(user=current_user, userid=current_user.get_id(), title=form.title.data, body=form.body.data)
+        new_post = Post(user=current_user, userid=current_user.get_id(), title=encrypted_title, body=encrypted_body)
         # Add new post to db
         db.session.add(new_post)
         db.session.commit()
