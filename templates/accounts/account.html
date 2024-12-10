@@ -10,65 +10,69 @@
         <div class="p-2 row">
                 <div class="col-3"></div>
                 <div class="col-6">
-                        
-                        <!-- Handle and render flash images -->
-                        <div>
-                                {% with messages = get_flashed_messages(with_categories=true) %}
-                                {% for category, message in messages %}
-                                <div class="alert alert-{{ category }} mt-3 alert-dismissible" role="alert">
-                                        {{ message }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" onclick=delete_flash(this)>
-                                                <span>&times;</span>
-                                        </button>
-                                </div>
-                                {% endfor %}
-                                {% endwith %}
-                        </div>
-
-                        <!-- Show account information -->
-
-                        <!-- If current user not none (anon) -->
-                        {% if user.is_authenticated %}
-                        <div class="container-fluid", style="border: 1px solid rgb(0, 0, 255)">
-                                <p style="text-align: left"> Account No: {{ user.id }} </p>
-                                <p style="text-align: left"> Email: {{ user.email }} </p>
-                                <p style="text-align: left"> First Name: {{ user.firstname }} </p>
-                                <p style="text-align: left"> Last Name: {{ user.lastname }} </p>
-                                <p style="text-align: left"> Phone No: {{ user.phone }} </p>
-                                
-                                <!-- Only show posts if end user -->
-                                {% if user.is_authenticated and user.role == 'end_user' %}
-                                <p style="text-align: left"> Posts: </p>
-
-                                <!-- Render posts -->
-                                    
-                                {% for post in user.posts %}
-                                <div class="card border border-dark">
-                                        <!-- Each post rendered by; presentation, title, d+t, author, body -->
-                                        <div class="card-header bg-dark text-white border border-dark">
-                                            <h4>{{ post.title }}</h4>
-                                            <small>{{ post.created.strftime('%H:%M:%S %d-%m-%Y') }}</small>
-                                            <small><br></br>{{ post.user.firstname }} {{ post.user.lastname }}</small>
-                                        </div>
-                                        <div class="card-body">{{ post.body }}</div>
-
-                                        <div class="card-footer">
-                                            <!-- Add update link for each post -->
-                                            <a class="navbar-item" href="{{ url_for('posts.update', id=post.id) }}">Update</a>
-                                            <!-- Add delete link for each post -->
-                                            <a class="navbar-item" href="{{ url_for('posts.delete', id=post.id) }}">Delete</a>
-                                        </div>
+                        <div class="p-2 bg-light border border-primary">
+                                <div style="text-align: left">
                                         
+                                        <!-- Handle and render flash images -->
+                                        <div>
+                                                {% with messages = get_flashed_messages(with_categories=true) %}
+                                                {% for category, message in messages %}
+                                                <div class="alert alert-{{ category }} mt-3 alert-dismissible" role="alert">
+                                                        {{ message }}
+                                                        <button type="button" class="btn-close" data-bs-dismiss="alert" onclick=delete_flash(this)>
+                                                                <span>&times;</span>
+                                                        </button>
+                                                </div>
+                                                {% endfor %}
+                                                {% endwith %}
+                                        </div>
+
+                                        <!-- Show account information -->
+
+                                        <!-- If current user not none (anon) -->
+                                        {% if user.is_authenticated %}
+                                        
+                                                <ol class="mx-2 my-2 p-2">
+
+                                                        <p style="text-align: left"> <b>Account No:</b> {{ user.id }} </p>
+                                                        <p style="text-align: left"> <b>Email:</b> {{ user.email }} </p>
+                                                        <p style="text-align: left"> <b>First Name:</b> {{ user.firstname }} </p>
+                                                        <p style="text-align: left"> <b>Last Name:</b> {{ user.lastname }} </p>
+                                                        <p style="text-align: left"> <b>Phone No:</b> {{ user.phone }} </p>
+                                                        
+                                                        <!-- Only show posts if end user -->
+                                                        {% if user.is_authenticated and user.role == 'end_user' %}
+                                                        <p style="text-align: left"> <b>Posts:</b> </p>
+
+                                                        <!-- Render posts -->
+                                                        <div style="text-align:left">
+                                                        {% for post in user.posts %}
+                                                        <div class="card border border-dark">
+                                                                <!-- Each post rendered by; presentation, title, d+t, author, body -->
+                                                                <div class="card-header bg-dark text-white border border-dark">
+                                                                <h4>{{ post.title }}</h4>
+                                                                <small>{{ post.created.strftime('%H:%M:%S %d-%m-%Y') }}</small>
+                                                                <small><br/>{{ post.user.firstname }} {{ post.user.lastname }}</small>
+                                                                </div>
+                                                                <div class="card-body">{{ post.body }}</div>
+
+                                                                <div class="card-footer">
+                                                                <!-- Add update link for each post -->
+                                                                <a class="navbar-item" href="{{ url_for('posts.update', id=post.id) }}">Update</a>
+                                                                <!-- Add delete link for each post -->
+                                                                <a class="navbar-item" href="{{ url_for('posts.delete', id=post.id) }}">Delete</a>
+                                                                </div>
+                                                                
+                                                        </div>
+                                                        <br/>
+                                                        {% endfor %}
+                                                        {% endif %}
+                                                </ol>
+
+                                        {% endif %}
                                 </div>
-                                
-                                <br>
-                                {% endfor %}
-                                {% endif %}
-
                         </div>
-                        {% endif %}
                 </div>
-
                 <div class="col-3"></div>
         </div>
     

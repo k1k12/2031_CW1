@@ -16,23 +16,13 @@ Flask-SQLAlchemy
 Flask-WTF
 Flask-Admin
 WTForms
-
-# PT 10
 Flask-Limiter
-
-# PT 11
-pyotp
+flask_talisman
 flask-qrcode
 
-# PT 16
+# Extension packages
+pyotp
 argon2-cffi
-
-# PT 17
 cryptography
-base-64 #Check
-
-# PT 18
 email_validator
-
-# PT 19
 python-dotenv

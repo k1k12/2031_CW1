@@ -29,7 +29,7 @@ def registration():
         if User.query.filter_by(email=form.email.data).first():
             # TO DO: Add link to login page (in msg in html or markup)
             flash('An account with this email already exists.', category='danger')
-            return render_template('accounts/login.html', form=form)
+            return redirect(url_for('accounts.login'))
         
         # Hash password
         password_hash = ph.hash(form.password.data)

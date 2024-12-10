@@ -22,6 +22,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_qrcode import QRcode
 from flask_login import LoginManager, UserMixin, current_user
+from flask_talisman import Talisman
 
 # Read values from env file
 load_dotenv()
@@ -93,6 +94,11 @@ conditions = {
     'sql injection': re.compile("Union|Select|Insert|Drop|Alter|;|`|'", re.IGNORECASE), 
               'xss': re.compile("<script>|<iframe>|%3Cscript%3E|%3Ciframe%3E", re.IGNORECASE), 
               'path traversal': re.compile("\.\.\/|\.\.|%2e%2e%2f|%2e%2e\/|\.\.%2f", re.IGNORECASE) }
+
+# Custom CSP
+csp = {'xyz-src': '\'self\'', 'script-src': ['https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/'], 'frame-src': ['https://www.google.com/recaptcha/', 'https://recaptcha.google.com/recaptcha/']}
+# Set up talisman for security headers
+talisman = Talisman(app, content_security_policy=csp) 
 
 # Create database object
 db = SQLAlchemy(app, metadata=metadata)

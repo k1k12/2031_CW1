@@ -40,7 +40,7 @@ class RegistrationForm(FlaskForm):
         Regexp('(?=.*\d)', message='Password must contain a digit.'), 
         Regexp('(?=.*\W)', message='Password must contain a special character.')])
     confirm_password = PasswordField('Confirm Password',validators=[DataRequired(), EqualTo('password', message='Both password fields must be equal!')])
-    submit = SubmitField('submit')
+    submit = SubmitField('Submit')
 
 # Login Form class / part 7
 class LoginForm(FlaskForm):
@@ -51,4 +51,4 @@ class LoginForm(FlaskForm):
     mfa_pin = StringField('MFA Code',validators=[DataRequired()])
     # reCAPTCHA / part 8 
     recaptcha = RecaptchaField()
-    submit = SubmitField('submit')
+    submit = SubmitField('Submit')
