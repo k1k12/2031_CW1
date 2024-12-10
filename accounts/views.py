@@ -1,5 +1,5 @@
 # Imports
-from flask import Blueprint, render_template, flash, redirect, url_for, session
+from flask import Blueprint, render_template, flash, redirect, url_for, session, request
 from accounts.forms import RegistrationForm, LoginForm
 from config import User, db, limiter, logger, ph
 from flask_login import login_required, login_user, logout_user, current_user
@@ -100,7 +100,7 @@ def login():
                 return render_template('accounts/login.html')
             
             # Log event
-            logger.warning('User: {}, No. Login Attempts: {}, IP Address: {}, MSG: User unsuccessfully attempted to login.'.format(user.email, session['num_attempts'], user.log.latest_ip))
+            logger.warning('User: {}, No. Login Attempts: {}, IP Address: {}, MSG: User unsuccessfully attempted to login.'.format(form.email.data, session['num_attempts'], request.remote_addr))
             # Display warning message if authentication attempts not exceeded
             flash('Login credentials incorrect, {} attempts remaining.'.format((3 - session.get('num_attempts'))), category='danger')
             return redirect(url_for('accounts.login'))

@@ -8,6 +8,7 @@ Blog website with focus on security features
 - MFA / 2FA
 
 TO DO
+- Fix ugly pages
 - Put go to login page message in registration
 - MFA key and ebanled show in DB
 - add name and student number above everything
@@ -24,4 +25,6 @@ TO DO
 - do i need format string attack prevention?
 - Check if is_active property is true
 - Does secret key in .env need to be unique
-
+- Check don't need to call error in code
+- check regex for conditions for waf
+- check location of waf function

@@ -5,6 +5,7 @@ import secrets
 import logging
 import pyotp
 import os
+import re
 # DB, encryption & security imports
 from sqlalchemy import MetaData
 from datetime import datetime
@@ -87,12 +88,16 @@ logger.addHandler(handler)
 # Define password hasher instance
 ph = PasswordHasher()
 
-# Create database object
+# Define wfa conditions
+conditions = { 
+    'sql injection': re.compile("Union|Select|Insert|Drop|Alter|;|`|'", re.IGNORECASE), 
+              'xss': re.compile("<script>|<iframe>|%3Cscript%3E|%3Ciframe%3E", re.IGNORECASE), 
+              'path traversal': re.compile("\.\.\/|\.\.|%2e%2e%2f|%2e%2e\/|\.\.%2f", re.IGNORECASE) }
 
+# Create database object
 db = SQLAlchemy(app, metadata=metadata)
 
 # Create Migrate object
-
 migrate = Migrate(app, db)
 
 # Define QR code

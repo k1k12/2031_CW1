@@ -1,7 +1,7 @@
 # Imports
-from config import app
-from flask import render_template
-
+from config import app, conditions
+from flask import render_template, request
+import re
 # Load webpage 'index' into browser
 @app.route('/')
 def index():
@@ -37,6 +37,13 @@ def error_handler(e):
 def error_handler(e):
     return render_template('errors/error501.html'), 501
 
+# Handle attempted attacks
+@app.before_request
+def attack_handler():
+    for attack_type, attack_pattern in conditions.items():
+        if attack_pattern.search(request.path) or attack_pattern.search(request.query_string.decode()):
+            return render_template('errors/error_attack.html', label=attack_type)
+
 # Main method
 if __name__ == '__main__':
-    app.run()
+    app.run(ssl_context='adhoc')

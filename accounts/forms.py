@@ -10,12 +10,12 @@ class RegistrationForm(FlaskForm):
     firstname = StringField('First Name',
                             validators=
             [DataRequired(),
-             Regexp('(?=.*[a-zA-Z-])', message='First name must only contain letters or hyphens.')
+             Regexp('^[a-zA-Z-]*$', message='First name must only contain letters or hyphens.')
              ])
     lastname = StringField('Last Name',
                            validators=
             [DataRequired(),
-             Regexp('(?=.*[a-zA-Z-])', message='Last name must only contain letters or hyphens.')
+             Regexp('^[a-zA-Z-]*$', message='Last name must only contain letters or hyphens.')
              ])
     email = StringField('Email Address',
                         validators=
@@ -25,7 +25,7 @@ class RegistrationForm(FlaskForm):
     phone = StringField('Phone Number',
                         validators=
             [DataRequired(),
-            #  E.164 standard validation
+            #  E.164 standard
              Regexp(r'(?:02\d-\d{8}|(?:011\d|01\d1)-\d{7}|01\d{3}-\d{5,6})', message='Invalid phone number: please adhere to E.164 standards.')
             
             ])
