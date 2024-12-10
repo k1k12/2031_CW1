@@ -17,3 +17,7 @@ TO DO
 - Check hiding db is right
 - Delete view for log before submission
 - change db priv back to db admin
+- reset default to db admin
+- do CRUD
+- user with account and password right but not enabled mfa errors
+- sometimes password verify hash error

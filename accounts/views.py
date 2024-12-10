@@ -1,7 +1,7 @@
 # Imports
 from flask import Blueprint, render_template, flash, redirect, url_for, session
 from accounts.forms import RegistrationForm, LoginForm
-from config import User, db, limiter, logger
+from config import User, db, limiter, logger, ph
 from flask_login import login_required, login_user, logout_user, current_user
 from markupsafe import Markup
 from datetime import datetime
@@ -21,6 +21,7 @@ def registration():
         flash('Please logout to access registration page.', category='danger')
         return render_template('home/index.html')
                         
+    # Create form instance
     form = RegistrationForm()
     # If user valid
     if form.validate_on_submit():
@@ -30,12 +31,15 @@ def registration():
             flash('An account with this email already exists.', category='danger')
             return render_template('accounts/login.html', form=form)
         
+        # Hash password
+        password_hash = ph.hash(form.password.data)
+
         # If user isn't taken in db, create new instance to add to db
         new_user = User(email=form.email.data,
                         firstname=form.firstname.data,
                         lastname=form.lastname.data,
                         phone=form.phone.data,
-                        password=form.password.data,
+                        password_hash=password_hash,
                         )
         
         # Create log of new user
@@ -73,17 +77,19 @@ def login():
     if form.validate_on_submit():
         # Define a var to represent finding user in db
         user = User.query.filter_by(email=form.email.data).first()
-        # Check user exists and passwords match
-        # Ugly fix this
+
+        # Check if user exists, passwords match and pins match
         if not user or not user.verify_password(form.password.data) or not user.verify_mfa_pin(form.mfa_pin.data):
-            # Check if have done MFA
-            if user and user.verify_password(form.password.data):
-                if not user.mfa_enabled:
-                    # If not redirect to MFA set up page
-                    flash('You must set up MFA before you can access your account.', category='danger')
-                    return render_template('accounts/mfa.html', key=user.mfa_key, qr=user.uri)
+            
+            # Check if have completed MFA
+            if user and user.verify_password(form.password.data) and not user.mfa_enabled:
+                # Redirect to MFA set up page           
+                flash('You must set up MFA before you can access your account.', category='danger')
+                return render_template('accounts/mfa.html', key=user.mfa_key, qr=user.uri)
+
             # Increment session key by 1
             session['num_attempts'] += 1
+            
             # If max attempts exceeded
             if session['num_attempts'] >= MAX_LOGIN_ATTEMPTS:
                 # Log event
@@ -95,13 +101,14 @@ def login():
             
             # Log event
             logger.warning('User: {}, No. Login Attempts: {}, IP Address: {}, MSG: User unsuccessfully attempted to login.'.format(user.email, session['num_attempts'], user.log.latest_ip))
-
             # Display warning message if authentication attempts not exceeded
             flash('Login credentials incorrect, {} attempts remaining.'.format((3 - session.get('num_attempts'))), category='danger')
             return redirect(url_for('accounts.login'))
-        elif user.verify_password(form.password.data) and user.verify_mfa_pin(form.mfa_pin.data):
+        
+        elif user and user.verify_password(form.password.data) and user.verify_mfa_pin(form.mfa_pin.data):
             # Reset session key
             session['num_attempts'] = 0
+
             # Check if user has set up MFA
             if not user.mfa_enabled:
                 user.mfa_enabled = True
@@ -115,7 +122,6 @@ def login():
 
             # Log event
             logger.warning('User: {}, Role: {}, IP Address: {}, MSG: Existing user successfully logged in.'.format(user.email, user.role, user.log.latest_ip))
-
             # Success flash
             flash('Login successful.', category='success')
 

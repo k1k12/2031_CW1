@@ -24,3 +24,5 @@ Flask-Limiter
 pyotp
 flask-qrcode
 
+# PT 16
+argon2-cffi

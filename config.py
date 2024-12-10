@@ -5,20 +5,14 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.menu import MenuLink
 import secrets
 import logging
-
-# imports pt 4
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import MetaData
 from datetime import datetime
-
-# Imports pt 11
 import pyotp
 from flask_qrcode import QRcode
-
-# Imports pt 12
 from flask_login import LoginManager, UserMixin, current_user
+from argon2 import PasswordHasher
 
 # Define app
 
@@ -59,13 +53,15 @@ metadata = MetaData(
 
 # Define login manager
 login_manager = LoginManager()
-
-# Initialise application
 login_manager.login_view = 'accounts.login'
 login_manager.login_message = 'Please login to access CSC2031 blog.'
 login_manager.login_message_category = 'info'
-
 login_manager.init_app(app)
+
+# User loader function
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
 
 # Logger set up
 
@@ -81,6 +77,9 @@ handler.setFormatter(formatter)
 # Pass handler to logger
 logger.addHandler(handler)
 
+# Define password hasher instance
+ph = PasswordHasher()
+
 # Create database object
 
 db = SQLAlchemy(app, metadata=metadata)
@@ -91,11 +90,6 @@ migrate = Migrate(app, db)
 
 # Define QR code
 qrcode = QRcode(app)
-
-# User loader function
-@login_manager.user_loader
-def load_user(id):
-    return User.query.get(int(id))
 
 # DB tables
 
@@ -146,7 +140,7 @@ class User(db.Model, UserMixin):
 
     # User authentication information
     email = db.Column(db.String(100), nullable=False, unique=True)
-    password = db.Column(db.String(100), nullable=False)
+    password_hash = db.Column(db.String(100), nullable=False)
 
     # User role
     role = db.Column(db.String(100), nullable=False, default='end_user')
@@ -154,6 +148,7 @@ class User(db.Model, UserMixin):
     # Store MFA key and whether enabled
     mfa_key = db.Column(db.String(100), nullable=True)
     mfa_enabled = db.Column(db.Boolean(), nullable=False, default=False)
+    uri = db.Column(db.String(100), nullable=True)
 
     # Store whether a user is active
     active = db.Column(db.Boolean(), nullable=False, default=False)
@@ -168,7 +163,7 @@ class User(db.Model, UserMixin):
     log = db.relationship("Log", uselist=False, back_populates="user")
     
     # Constructor method
-    def __init__(self, email, firstname, lastname, phone, password):
+    def __init__(self, email, firstname, lastname, phone, password_hash):
         # CRUD operations
         # self.can_create = False
 
@@ -177,17 +172,17 @@ class User(db.Model, UserMixin):
         self.firstname = firstname
         self.lastname = lastname
         self.phone = phone
-        self.password = password
+        self.password_hash = password_hash
         # Store MFA key and whether enabled
         self.mfa_key = pyotp.random_base32()
-        self.mfa_enabled = False
         self.uri = str(pyotp.totp.TOTP(self.mfa_key).provisioning_uri(self.email, "csc2031"))
+        self.mfa_enabled = False
         # User role
         self.role = 'end_user'
 
     # Check if login password = submitted password
     def verify_password(self, submitted_password):
-        return self.password == submitted_password
+        return ph.verify(self.password_hash, submitted_password)
 
     # Check if login pin = submitted pin
     def verify_mfa_pin(self, submitted_pin):
@@ -268,28 +263,10 @@ class PostView(ModelView):
 class UserView(ModelView):
     column_display_pk = True  # optional, but I like to see the IDs in the list
     column_hide_backrefs = False
-    column_list = ('id', 'email', 'password', 'firstname', 'lastname', 'phone', 'mfa key', 'mfa enabled', 'posts')
+    column_list = ('id', 'email', 'password hash', 'firstname', 'lastname', 'phone', 'mfa key', 'mfa enabled', 'posts')
     
     # Ensure user is authenticated
     def is_accessible(self):
-        return current_user.get_id() and (current_user.role == 'db_admin')
-
-    # Ensure user is authenticated
-    def inacessible_callback(self, name, *kwargs):
-        if current_user.get_id():
-            return redirect('errors/error403.html')
-        flash('Please login before attempting to access this page.')
-        return redirect(url_for('accounts.login'))
-
-# Create LogView class
-class LogView(ModelView):
-    column_display_pk = True  # optional, but I like to see the IDs in the list
-    column_hide_backrefs = False
-    column_list = ('id', 'userid', 'registered on', 'latest login', 'previous login', 'latest ip', 'previous ip', 'user')
-    
-    # Ensure user is authenticated
-    def is_accessible(self):
-        # Change back!
         return current_user.get_id() and (current_user.role == 'db_admin')
 
     # Ensure user is authenticated
@@ -312,10 +289,8 @@ admin.add_link(MainIndexLink(name='Home Page'))
 admin.add_view(PostView(Post, db.session))
 # To view data on users table
 admin.add_view(UserView(User, db.session))
-# To view data on logs table
-admin.add_view(LogView(Log, db.session))
 
-## Implement rate limiter PT 10
+# Implement rate limiter PT 10
 
 # Imports for rate limiter
 from flask_limiter import Limiter
